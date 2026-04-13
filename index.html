@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flip-dle Prototype</title>
+    <style>
+        body {
+            font-family: 'Clear Sans', 'Helvetica Neue', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #121213;
+            color: white;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 { margin-bottom: 5px; }
+        p { color: #818384; margin-top: 0; text-align: center; max-width: 400px; }
+        
+        #board {
+            display: grid;
+            grid-template-rows: repeat(6, 1fr);
+            grid-gap: 5px;
+            margin-bottom: 20px;
+        }
+        .row {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-gap: 5px;
+        }
+        .tile {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #3a3a3c;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        /* The Magic Flip Class */
+        .flipped {
+            transform: rotate(180deg);
+            color: #ff9800; /* Coloring flipped letters slightly different so you notice */
+        }
+
+        /* Wordle Colors */
+        .correct { background-color: #538d4e; border-color: #538d4e; }
+        .present { background-color: #b59f3b; border-color: #b59f3b; }
+        .absent { background-color: #3a3a3c; border-color: #3a3a3c; }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+        input {
+            padding: 10px;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            width: 200px;
+            text-align: center;
+            border: none;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            background-color: #538d4e;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover { background-color: #43733e; }
+        #message { margin-top: 20px; font-weight: bold; font-size: 1.2rem; height: 1.5rem; }
+    </style>
+</head>
+<body>
+
+    <h1>FLIP-DLE</h1>
+    <p>Target word is 5 letters. M, W, B, Q, D, P, N, and U have a 50% chance to flip 180° before being graded!</p>
+
+    <div id="board"></div>
+
+    <div class="controls">
+        <input type="text" id="guessInput" maxlength="5" placeholder="TYPE GUESS">
+        <button onclick="submitGuess()">GUESS</button>
+    </div>
+    
+    <div id="message"></div>
+
+    <script>
+        // Prototype Settings
+        const TARGET_WORD = "SWORD"; // Hardcoded for prototype
+        const MAX_GUESSES = 6;
+        let currentGuessCount = 0;
+        let gameOver = false;
+
+        // The Flip Dictionary
+        const FLIP_MAP = {
+            'M': 'W', 'W': 'M',
+            'B': 'Q', 'Q': 'B',
+            'D': 'P', 'P': 'D',
+            'N': 'U', 'U': 'N'
+        };
+
+        // Initialize Board
+        const board = document.getElementById('board');
+        for (let i = 0; i < MAX_GUESSES; i++) {
+            const row = document.createElement('div');
+            row.className = 'row';
+            for (let j = 0; j < 5; j++) {
+                const tile = document.createElement('div');
+                tile.className = 'tile';
+                row.appendChild(tile);
+            }
+            board.appendChild(row);
+        }
+
+        function showMessage(msg) {
+            document.getElementById('message').innerText = msg;
+        }
+
+        function submitGuess() {
+            if (gameOver) return;
+
+            const inputField = document.getElementById('guessInput');
+            let guess = inputField.value.toUpperCase();
+
+            // Validate length
+            if (guess.length !== 5) {
+                showMessage("Guess must be 5 letters!");
+                return;
+            }
+            if (!/^[A-Z]{5}$/.test(guess)) {
+                showMessage("Letters only!");
+                return;
+            }
+
+            showMessage(""); // Clear errors
+            
+            // 1. Transform the guess (The Flip-dle Mechanic)
+            let finalGuess = "";
+            let flipStatus = []; // Array of booleans to track what flipped
+
+            for (let i = 0; i < 5; i++) {
+                let char = guess[i];
+                // 50% chance to flip if it's in the FLIP_MAP
+                if (FLIP_MAP[char] && Math.random() > 0.5) {
+                    finalGuess += FLIP_MAP[char];
+                    flipStatus.push(true);
+                } else {
+                    finalGuess += char;
+                    flipStatus.push(false);
+                }
+            }
+
+            // 2. Grade the transformed guess
+            let rowNodes = document.querySelectorAll('.row')[currentGuessCount].children;
+            let targetArray = TARGET_WORD.split('');
+            let guessArray = finalGuess.split('');
+            let colors = new Array(5).fill('absent');
+
+            // Pass 1: Find Exact Matches (Greens)
+            for (let i = 0; i < 5; i++) {
+                if (guessArray[i] === targetArray[i]) {
+                    colors[i] = 'correct';
+                    targetArray[i] = null; // Mark as used
+                }
+            }
+
+            // Pass 2: Find Partial Matches (Yellows)
+            for (let i = 0; i < 5; i++) {
+                if (colors[i] === 'correct') continue;
+                
+                let targetIndex = targetArray.indexOf(guessArray[i]);
+                if (targetIndex !== -1) {
+                    colors[i] = 'present';
+                    targetArray[targetIndex] = null; // Mark as used
+                }
+            }
+
+            // 3. Render the row
+            for (let i = 0; i < 5; i++) {
+                // If it flipped, we show the ORIGINAL character physically turned upside down
+                // If it didn't flip, we just show the character normally
+                let displayChar = flipStatus[i] ? guess[i] : finalGuess[i];
+                
+                rowNodes[i].innerText = displayChar;
+                rowNodes[i].classList.add(colors[i]);
+                
+                if (flipStatus[i]) {
+                    rowNodes[i].classList.add('flipped');
+                }
+            }
+
+            // 4. Check Win/Loss
+            currentGuessCount++;
+            inputField.value = ""; // Clear input
+
+            if (finalGuess === TARGET_WORD) {
+                showMessage("You win! You decoded the flips.");
+                gameOver = true;
+            } else if (currentGuessCount >= MAX_GUESSES) {
+                showMessage("Game Over. The word was " + TARGET_WORD);
+                gameOver = true;
+            }
+        }
+
+        // Allow Enter key to submit
+        document.getElementById("guessInput").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                submitGuess();
+            }
+        });
+    </script>
+</body>
+</html>
