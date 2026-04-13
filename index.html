@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manual Flip-dle</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-color: #0f172a;
@@ -13,7 +14,7 @@
             --active-border: #94a3b8;
             --tile-bg: #334155;
             --tile-hover: #475569;
-            --accent-color: #fbbf24; /* Amber for flipped state */
+            --accent-color: #fbbf24; 
             --correct: #16a34a;
             --present: #ca8a04;
             --absent: #1e293b;
@@ -22,7 +23,8 @@
         }
 
         body {
-            font-family: 'Century Gothic', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            /* Applied the new rounded font */
+            font-family: 'Nunito', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -65,6 +67,8 @@
             text-transform: lowercase;
             background-color: var(--bg-color);
             box-sizing: border-box;
+            /* Ensures the 'l' and other tall letters don't throw off alignment */
+            line-height: 1; 
         }
         .board-tile.active { border-color: var(--active-border); }
 
@@ -93,12 +97,12 @@
             text-transform: lowercase;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             transition: background-color 0.2s;
+            line-height: 1;
         }
         .bank-tile:hover {
             background-color: var(--tile-hover);
         }
 
-        /* The physical rotation class applied to the text span */
         .char-span {
             display: inline-block;
             transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -146,6 +150,7 @@
             letter-spacing: 1px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             transition: opacity 0.2s, transform 0.1s;
+            font-family: 'Nunito', sans-serif;
         }
         button.action-btn:active { transform: translateY(2px); }
         button.action-btn.backspace {
@@ -160,12 +165,39 @@
         .board-tile.absent { background-color: var(--absent); border-color: var(--border-color); color: var(--active-border);}
 
         #message { margin-top: 20px; font-weight: bold; font-size: 1.2rem; height: 1.5rem; color: var(--accent-color);}
+
+        /* Debug Button Styles */
+        .debug-container {
+            margin-top: 40px;
+            text-align: center;
+        }
+        .debug-btn {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--border-color);
+            padding: 5px 10px;
+            font-size: 0.8rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Nunito', sans-serif;
+        }
+        .debug-btn:hover {
+            color: var(--active-border);
+            border-color: var(--active-border);
+        }
+        #debugWord {
+            display: block;
+            margin-top: 5px;
+            font-size: 0.9rem;
+            color: var(--accent-color);
+            visibility: hidden;
+        }
     </style>
 </head>
 <body>
 
     <h1>Flip-dle</h1>
-    <p>Target word: <strong>plumb</strong><br>Use the letter bank below. Click the corner icon to flip letters 180° before building your word!</p>
+    <p>Use the letter bank below. Click the corner icon to flip letters 180° before building your guess!</p>
 
     <div id="board"></div>
     <div id="bank"></div>
@@ -176,6 +208,11 @@
     </div>
 
     <div id="message"></div>
+
+    <div class="debug-container">
+        <button class="debug-btn" onclick="toggleDebug()">Debug: Reveal Target Word</button>
+        <span id="debugWord"></span>
+    </div>
 
     <script>
         const TARGET_WORD = "plumb";
@@ -205,7 +242,6 @@
                 const tile = document.createElement('div');
                 tile.className = 'board-tile';
                 
-                // Use a span for the text so we can rotate just the letter, not the whole box
                 const charSpan = document.createElement('span');
                 charSpan.className = 'char-span';
                 tile.appendChild(charSpan);
@@ -222,20 +258,18 @@
             tile.className = 'bank-tile';
             tile.onclick = () => addLetterToGuess(index);
 
-            // The letter text
             const charSpan = document.createElement('span');
             charSpan.className = 'char-span';
             charSpan.innerText = item.char;
             tile.appendChild(charSpan);
 
-            // Add the integrated rotate button ONLY if it has a flipChar
             if (item.flipChar) {
                 const flipBtn = document.createElement('button');
                 flipBtn.className = 'flip-btn';
                 flipBtn.innerHTML = '↻';
                 flipBtn.title = "Flip 180°";
                 flipBtn.onclick = (e) => {
-                    e.stopPropagation(); // Prevents adding the letter when flipping
+                    e.stopPropagation(); 
                     toggleFlip(index, tile);
                 };
                 tile.appendChild(flipBtn);
@@ -353,6 +387,18 @@
                 gameOver = true;
             } else {
                 currentGuess = []; 
+            }
+        }
+
+        // Debug Reveal Function
+        function toggleDebug() {
+            const debugText = document.getElementById('debugWord');
+            if (debugText.style.visibility === 'visible') {
+                debugText.style.visibility = 'hidden';
+                debugText.innerText = '';
+            } else {
+                debugText.style.visibility = 'visible';
+                debugText.innerText = 'Target: ' + TARGET_WORD;
             }
         }
 
