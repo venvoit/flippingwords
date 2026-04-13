@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flip-dle Prototype</title>
+    <title>Manual Flip-dle</title>
     <style>
-        /* Using geometric fonts like Century Gothic or Helvetica makes the b/q d/p flips look perfect */
         body {
             font-family: 'Century Gothic', 'Helvetica Neue', Helvetica, Arial, sans-serif;
             display: flex;
@@ -15,22 +14,24 @@
             color: white;
             margin: 0;
             padding: 20px;
+            user-select: none;
         }
-        h1 { margin-bottom: 5px; text-transform: uppercase; }
-        p { color: #818384; margin-top: 0; text-align: center; max-width: 400px; margin-bottom: 20px;}
+        h1 { margin-bottom: 5px; text-transform: uppercase; letter-spacing: 2px;}
+        p { color: #818384; margin-top: 0; text-align: center; max-width: 500px; margin-bottom: 20px;}
         
+        /* Game Board */
         #board {
             display: grid;
             grid-template-rows: repeat(6, 1fr);
             grid-gap: 5px;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
         }
         .row {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             grid-gap: 5px;
         }
-        .tile {
+        .board-tile {
             width: 60px;
             height: 60px;
             border: 2px solid #3a3a3c;
@@ -39,111 +40,255 @@
             align-items: center;
             font-size: 2.5rem;
             font-weight: bold;
-            /* CRITICAL FIX: Forces all letters to lowercase for the visual illusion to work */
-            text-transform: lowercase; 
+            text-transform: lowercase;
+            transition: transform 0.3s ease;
+        }
+        .board-tile.active { border-color: #818384; }
+
+        /* Letter Bank */
+        #bank {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            max-width: 400px;
+            margin-bottom: 20px;
+        }
+        .bank-tile-container {
+            position: relative;
+            width: 60px;
+            height: 80px; /* Extra height for the flip button */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .bank-tile {
+            width: 60px;
+            height: 60px;
+            background-color: #818384;
+            border-radius: 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: lowercase;
+            transition: transform 0.3s ease;
+        }
+        .bank-tile:hover {
+            background-color: #9ca0a1;
         }
         
-        /* Active typing border */
-        .tile.active { border-color: #818384; }
-
-        /* The Magic Flip Class */
+        /* The physical rotation class */
         .flipped {
             transform: rotate(180deg);
-            color: #ff9800; /* Colors flipped letters slightly orange */
         }
+
+        /* Flip Toggle Button */
+        .flip-btn {
+            margin-top: 5px;
+            background: none;
+            border: none;
+            color: #ff9800;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+        .flip-btn:hover { color: #ffb74d; }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+        button.action-btn {
+            padding: 15px 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            background-color: #538d4e;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+        button.action-btn.backspace {
+            background-color: #3a3a3c;
+        }
+        button.action-btn:hover { opacity: 0.8; }
 
         /* Wordle Colors */
         .correct { background-color: #538d4e; border-color: #538d4e; }
         .present { background-color: #b59f3b; border-color: #b59f3b; }
         .absent { background-color: #3a3a3c; border-color: #3a3a3c; }
 
-        #message { font-weight: bold; font-size: 1.2rem; height: 1.5rem; }
+        #message { margin-top: 20px; font-weight: bold; font-size: 1.2rem; height: 1.5rem; }
     </style>
 </head>
 <body>
 
-    <h1>Flip-dle</h1>
-    <p>Target word: sword. m, w, b, q, d, p, n, and u have a 50% chance to flip 180° before being graded!</p>
+    <h1>Manual Flip-dle</h1>
+    <p>Target word: <strong>plumb</strong>. Use the letter bank below. Click the orange arrow to flip letters 180° before adding them to your guess!</p>
 
     <div id="board"></div>
+
+    <div id="bank"></div>
+
+    <div class="controls">
+        <button class="action-btn backspace" onclick="backspace()">Backspace</button>
+        <button class="action-btn" onclick="submitGuess()">Submit Guess</button>
+    </div>
+
     <div id="message"></div>
 
     <script>
-        // Prototype Settings - Now completely lowercase
-        const TARGET_WORD = "sword"; 
+        const TARGET_WORD = "plumb";
         const MAX_GUESSES = 6;
-        let currentGuessCount = 0;
-        let currentGuess = "";
+        let currentAttempt = 0;
+        
+        // currentGuess stores objects: { letter: 'p', isFlipped: true/false }
+        let currentGuess = []; 
         let gameOver = false;
 
-        // The Flip Dictionary - Updated to lowercase
-        const FLIP_MAP = {
-            'm': 'w', 'w': 'm',
-            'b': 'q', 'q': 'b',
-            'd': 'p', 'p': 'd',
-            'n': 'u', 'u': 'n'
-        };
+        // The Letter Bank Definition
+        const bankData = [
+            { id: 0, char: 'd', flipChar: 'p', isFlipped: false },
+            { id: 1, char: 'l', flipChar: null, isFlipped: false },
+            { id: 2, char: 'n', flipChar: 'u', isFlipped: false },
+            { id: 3, char: 'w', flipChar: 'm', isFlipped: false },
+            { id: 4, char: 'q', flipChar: 'b', isFlipped: false },
+            { id: 5, char: 'a', flipChar: null, isFlipped: false },
+            { id: 6, char: 'e', flipChar: null, isFlipped: false },
+            { id: 7, char: 'r', flipChar: null, isFlipped: false }
+        ];
 
-        // Initialize Board
+        // 1. Initialize Game Board UI
         const board = document.getElementById('board');
         for (let i = 0; i < MAX_GUESSES; i++) {
             const row = document.createElement('div');
             row.className = 'row';
             for (let j = 0; j < 5; j++) {
                 const tile = document.createElement('div');
-                tile.className = 'tile';
+                tile.className = 'board-tile';
                 row.appendChild(tile);
             }
             board.appendChild(row);
         }
 
+        // 2. Initialize Letter Bank UI
+        const bankContainer = document.getElementById('bank');
+        bankData.forEach((item, index) => {
+            const container = document.createElement('div');
+            container.className = 'bank-tile-container';
+
+            // The main letter tile
+            const tile = document.createElement('div');
+            tile.className = 'bank-tile';
+            tile.innerText = item.char;
+            tile.onclick = () => addLetterToGuess(index);
+
+            container.appendChild(tile);
+
+            // Add a rotate button if it has a flipChar
+            if (item.flipChar) {
+                const flipBtn = document.createElement('button');
+                flipBtn.className = 'flip-btn';
+                flipBtn.innerHTML = '↻';
+                flipBtn.onclick = (e) => {
+                    e.stopPropagation(); // Prevents adding the letter when flipping
+                    toggleFlip(index, tile);
+                };
+                container.appendChild(flipBtn);
+            }
+
+            bankContainer.appendChild(container);
+        });
+
+        // Helper: Show messages
         function showMessage(msg) {
             const msgDiv = document.getElementById('message');
             msgDiv.innerText = msg;
             if (!gameOver && msg !== "") {
-                setTimeout(() => { msgDiv.innerText = ""; }, 2000);
+                setTimeout(() => { msgDiv.innerText = ""; }, 2500);
             }
         }
 
-        function updateBoard() {
+        // Logic: Flip a bank letter
+        function toggleFlip(index, tileElement) {
             if (gameOver) return;
-            let rowNodes = document.querySelectorAll('.row')[currentGuessCount].children;
+            const item = bankData[index];
+            item.isFlipped = !item.isFlipped;
+            
+            // Physically rotate the DOM element
+            if (item.isFlipped) {
+                tileElement.classList.add('flipped');
+            } else {
+                tileElement.classList.remove('flipped');
+            }
+        }
+
+        // Logic: Add letter to current row
+        function addLetterToGuess(index) {
+            if (gameOver || currentGuess.length >= 5) return;
+            
+            const item = bankData[index];
+            // Determine logical value based on flip state
+            const currentLogicalChar = item.isFlipped ? item.flipChar : item.char;
+
+            currentGuess.push({
+                char: item.char, // We store the original char for visual rotation on the board
+                logicalChar: currentLogicalChar,
+                isFlipped: item.isFlipped
+            });
+
+            updateBoardUI();
+        }
+
+        // Logic: Remove last letter
+        function backspace() {
+            if (gameOver || currentGuess.length === 0) return;
+            currentGuess.pop();
+            updateBoardUI();
+        }
+
+        // UI: Render the current row
+        function updateBoardUI() {
+            const rowNodes = document.querySelectorAll('.row')[currentAttempt].children;
+            
             for (let i = 0; i < 5; i++) {
-                rowNodes[i].innerText = currentGuess[i] || "";
-                if (currentGuess[i]) {
+                // Reset classes
+                rowNodes[i].className = 'board-tile';
+                
+                if (i < currentGuess.length) {
+                    const guessItem = currentGuess[i];
+                    rowNodes[i].innerText = guessItem.char;
                     rowNodes[i].classList.add('active');
+                    
+                    if (guessItem.isFlipped) {
+                        rowNodes[i].classList.add('flipped');
+                    }
                 } else {
-                    rowNodes[i].classList.remove('active');
+                    rowNodes[i].innerText = "";
                 }
             }
         }
 
+        // Logic: Submit and Grade
         function submitGuess() {
+            if (gameOver) return;
             if (currentGuess.length !== 5) {
-                showMessage("Not enough letters");
+                showMessage("Not enough letters!");
                 return;
             }
 
-            let finalGuess = "";
-            let flipStatus = []; 
-            let rowNodes = document.querySelectorAll('.row')[currentGuessCount].children;
-
-            // 1. Transform the guess
-            for (let i = 0; i < 5; i++) {
-                let char = currentGuess[i];
-                if (FLIP_MAP[char] && Math.random() > 0.5) {
-                    finalGuess += FLIP_MAP[char];
-                    flipStatus.push(true);
-                } else {
-                    finalGuess += char;
-                    flipStatus.push(false);
-                }
-            }
-
-            // 2. Grade the transformed guess
+            const rowNodes = document.querySelectorAll('.row')[currentAttempt].children;
             let targetArray = TARGET_WORD.split('');
-            let guessArray = finalGuess.split('');
+            let guessArray = currentGuess.map(g => g.logicalChar); // We grade the logical letters
             let colors = new Array(5).fill('absent');
+
+            let finalWordString = guessArray.join('');
 
             // Pass 1: Exact Matches (Greens)
             for (let i = 0; i < 5; i++) {
@@ -163,49 +308,32 @@
                 }
             }
 
-            // 3. Render the row colors and flips
+            // Apply colors
             for (let i = 0; i < 5; i++) {
                 rowNodes[i].classList.remove('active');
                 rowNodes[i].classList.add(colors[i]);
-                
-                // If it flipped, show the visually flipped original letter
-                if (flipStatus[i]) {
-                    rowNodes[i].classList.add('flipped');
-                }
+                // Ensure text color is white so it reads well on colored backgrounds
+                rowNodes[i].style.color = "white"; 
             }
 
-            // 4. Check Win/Loss
-            currentGuessCount++;
+            // Check Win/Loss
+            currentAttempt++;
             
-            if (finalGuess === TARGET_WORD) {
-                showMessage("You win! You decoded the flips.");
+            if (finalWordString === TARGET_WORD) {
+                showMessage("You win! You built the word.");
                 gameOver = true;
-            } else if (currentGuessCount >= MAX_GUESSES) {
+            } else if (currentAttempt >= MAX_GUESSES) {
                 showMessage("Game Over. The word was " + TARGET_WORD);
                 gameOver = true;
             } else {
-                currentGuess = ""; // Reset for next line
+                currentGuess = []; // Reset for next line
             }
         }
 
-        // Global Keyboard Listener
+        // Add keyboard support for backspace and enter to make testing easier
         document.addEventListener("keydown", (e) => {
-            if (gameOver) return;
-
-            // CRITICAL FIX: Capture keys as lowercase
-            let key = e.key.toLowerCase();
-
-            if (key === "enter") {
-                submitGuess();
-            } else if (key === "backspace") {
-                currentGuess = currentGuess.slice(0, -1);
-                updateBoard();
-            } else if (/^[a-z]$/.test(key)) {
-                if (currentGuess.length < 5) {
-                    currentGuess += key;
-                    updateBoard();
-                }
-            }
+            if (e.key === "Backspace") backspace();
+            if (e.key === "Enter") submitGuess();
         });
     </script>
 </body>
