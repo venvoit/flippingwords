@@ -3,97 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manual Flip-dle - Polished</title>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800&display=swap" rel="stylesheet">
+    <title>Flip-dle - Play Now</title>
+    <link href="https://fonts.googleapis.com/css2?family=Genos:wght@500;700&family=Iceland&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #0f172a;
-            --board-bg: #1e293b;
-            --bank-bg: #0b1121;
-            --text-color: #f8fafc;
-            --text-muted: #94a3b8;
-            --border-color: #334155;
-            --active-border: #cbd5e1;
-            --tile-bg: #334155;
-            --tile-hover: #475569;
+            /* Set a global CSS variable for the active font */
+            --app-font: 'Nunito', sans-serif;
+            
+            /* Branding: Relaxing, vibrant mobile game aesthetic */
+            --bg-gradient: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
+            --board-bg: rgba(255, 255, 255, 0.08);
+            --bank-bg: rgba(0, 0, 0, 0.2);
+            
+            --text-color: #ffffff;
+            --text-muted: #cbd5e1;
+            
+            /* Physical Tile Look */
+            --tile-bg: #f8fafc;
+            --tile-text: #0f172a;
+            --tile-border: #e2e8f0;
+            --tile-shadow: #94a3b8;
+            
+            --active-border: #38bdf8;
             --accent-color: #fbbf24; 
-            --correct: #16a34a;
-            --present: #ca8a04;
-            --absent: #1e293b;
-            --btn-bg: #475569;
-            --btn-hover: #64748b;
+            
+            /* Graded Colors */
+            --correct: #22c55e;
+            --present: #eab308;
+            --absent: #64748b;
         }
 
         body {
-            font-family: 'Nunito', sans-serif;
+            font-family: var(--app-font);
             display: flex;
             flex-direction: column;
             align-items: center;
-            background-color: var(--bg-color);
+            background: var(--bg-gradient);
             color: var(--text-color);
             margin: 0;
-            padding: 40px 20px;
+            padding: 30px 20px 50px 20px;
+            min-height: 100vh;
             user-select: none;
+            box-sizing: border-box;
+            transition: font-family 0.2s ease;
         }
 
-        h1 { margin: 0 0 5px 0; text-transform: uppercase; letter-spacing: 4px; font-size: 2.2rem; font-weight: 800;}
-        #dayIndicator { font-size: 1.1rem; color: var(--accent-color); margin-bottom: 12px; font-weight: bold; letter-spacing: 1px;}
-        p { color: var(--text-muted); margin-top: 0; text-align: center; max-width: 480px; margin-bottom: 30px; font-size: 1.05rem; line-height: 1.5;}
+        h1 { margin: 0 0 5px 0; text-transform: uppercase; letter-spacing: 2px; font-size: 2.4rem; font-weight: 900; text-shadow: 0 2px 4px rgba(0,0,0,0.3);}
+        #dayIndicator { font-size: 1.1rem; color: var(--accent-color); margin-bottom: 15px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase;}
+        p.subtitle { color: var(--text-muted); margin-top: 0; text-align: center; max-width: 450px; margin-bottom: 30px; font-size: 1.05rem; line-height: 1.5;}
         
         /* Game Board */
         #board {
             display: grid;
-            grid-template-rows: repeat(6, 1fr);
+            grid-template-rows: repeat(4, 1fr);
             grid-gap: 8px;
             margin-bottom: 35px;
-            padding: 12px;
-            background-color: var(--board-bg);
-            border-radius: 12px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+            background: var(--board-bg);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
         }
         .row {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             grid-gap: 8px;
+            transition: transform 0.1s;
         }
         .board-tile {
-            width: 62px;
-            height: 62px;
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
+            width: 60px;
+            height: 60px;
+            background-color: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 2.4rem;
-            font-weight: bold;
+            font-size: 2.2rem;
+            font-weight: 800;
             text-transform: lowercase;
-            background-color: var(--bg-color);
+            color: var(--tile-text);
             box-sizing: border-box;
             line-height: 1; 
-            transition: transform 0.1s, border-color 0.2s;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .board-tile.active-row { border-color: #64748b; }
-        .board-tile.filled { border-color: var(--active-border); animation: pop 0.15s ease-out; }
+        
+        /* When typing into a tile */
+        .board-tile.filled { 
+            background-color: var(--tile-bg);
+            border: none;
+            box-shadow: 0 4px 0 var(--tile-shadow);
+            transform: translateY(-2px);
+            animation: pop 0.2s ease-out; 
+        }
 
         @keyframes pop {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.08); }
-            100% { transform: scale(1); }
+            0% { transform: scale(1) translateY(0); }
+            50% { transform: scale(1.1) translateY(-4px); }
+            100% { transform: scale(1) translateY(-2px); }
         }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            50% { transform: translateX(6px); }
+            75% { transform: translateX(-6px); }
+        }
+        .shake { animation: shake 0.3s ease-in-out; }
 
         /* Structured Letter Bank */
         #bank-container {
             background-color: var(--bank-bg);
             padding: 16px;
-            border-radius: 12px;
+            border-radius: 16px;
             margin-bottom: 35px;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
-            border: 1px solid var(--border-color);
+            box-shadow: inset 0 4px 6px rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.05);
         }
         #bank {
             display: grid;
-            grid-template-columns: repeat(4, 62px); 
-            grid-template-rows: repeat(2, 62px); 
+            grid-template-columns: repeat(4, 60px); 
+            grid-template-rows: repeat(2, 60px); 
             gap: 12px;
             justify-content: center;
         }
@@ -102,87 +132,106 @@
             width: 100%;
             height: 100%;
             background-color: var(--tile-bg);
-            border-radius: 8px;
+            color: var(--tile-text);
+            border-radius: 10px;
             display: flex;
             justify-content: center;
             align-items: center;
             font-size: 2.2rem;
-            font-weight: bold;
+            font-weight: 800;
             cursor: pointer;
             text-transform: lowercase;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            transition: background-color 0.2s, transform 0.1s;
+            box-shadow: 0 4px 0 var(--tile-shadow);
+            transition: all 0.1s;
             line-height: 1;
-            border: 1px solid #475569;
         }
-        .bank-tile:hover { background-color: var(--tile-hover); transform: translateY(-2px); }
-        .bank-tile:active { transform: translateY(1px); }
+        .bank-tile:hover { transform: translateY(-2px); box-shadow: 0 6px 0 var(--tile-shadow); }
+        .bank-tile:active { transform: translateY(4px); box-shadow: 0 0 0 var(--tile-shadow); }
 
         .char-span {
             display: inline-block;
-            transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s;
         }
         .flipped .char-span {
             transform: rotate(180deg);
-            color: var(--accent-color);
+        }
+        
+        /* Highlight flipped letters in the bank to remind players they are altered */
+        .bank-tile.flipped .char-span,
+        .board-tile.filled.flipped .char-span {
+            color: #d97706; 
         }
 
         .flip-btn {
             position: absolute;
-            top: 4px;
-            right: 4px;
-            background: rgba(15, 23, 42, 0.6); 
-            border: none;
-            color: var(--active-border);
-            font-size: 0.9rem;
+            top: -5px;
+            right: -5px;
+            background: #0f172a; 
+            border: 2px solid #38bdf8;
+            color: #38bdf8;
+            font-size: 1rem;
+            font-weight: bold;
             cursor: pointer;
-            padding: 3px;
+            padding: 0;
             line-height: 1;
             border-radius: 50%;
             transition: all 0.2s;
-            width: 22px;
-            height: 22px;
+            width: 24px;
+            height: 24px;
             display: flex;
             justify-content: center;
             align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            z-index: 2;
         }
-        .flip-btn:hover { color: var(--accent-color); background: rgba(15, 23, 42, 0.9); transform: scale(1.15) rotate(90deg); }
+        .flip-btn:hover { color: #0f172a; background: #38bdf8; transform: scale(1.15) rotate(90deg); }
 
         /* Controls */
-        .controls { display: flex; gap: 16px; }
+        .controls { display: flex; gap: 12px; width: 100%; max-width: 340px; justify-content: center;}
         button.action-btn {
-            padding: 16px 28px;
+            padding: 16px 20px;
             font-size: 1.1rem;
-            font-weight: 800;
-            background: linear-gradient(180deg, #16a34a 0%, #15803d 100%);
+            font-weight: 900;
+            background: var(--correct);
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             cursor: pointer;
             text-transform: uppercase;
             letter-spacing: 1px;
-            font-family: 'Nunito', sans-serif;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            font-family: var(--app-font);
+            box-shadow: 0 5px 0 #15803d;
             transition: all 0.1s;
+            flex: 1;
         }
-        button.action-btn:active { transform: translateY(3px); box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
-        button.action-btn.backspace { background: linear-gradient(180deg, #475569 0%, #334155 100%); }
-        button.action-btn.backspace:hover { background: linear-gradient(180deg, #64748b 0%, #475569 100%); }
-        button.action-btn:hover:not(.backspace) { background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%); }
+        button.action-btn:active { transform: translateY(5px); box-shadow: 0 0 0 #15803d; }
+        button.action-btn:disabled { opacity: 0.7; cursor: not-allowed; transform: none; box-shadow: 0 5px 0 #15803d; }
+        
+        button.action-btn.backspace { background: #64748b; box-shadow: 0 5px 0 #334155; flex: 0.6; }
+        button.action-btn.backspace:active:not(:disabled) { box-shadow: 0 0 0 #334155; }
+        
+        button.action-btn.share-btn { background: #3b82f6; box-shadow: 0 5px 0 #1d4ed8; width: 100%; flex: 1; display: none;}
+        button.action-btn.share-btn:active { box-shadow: 0 0 0 #1d4ed8; }
 
         /* Graded Colors */
-        .board-tile.correct { background-color: var(--correct); border-color: var(--correct); color: white;}
-        .board-tile.present { background-color: var(--present); border-color: var(--present); color: white;}
-        .board-tile.absent { background-color: var(--absent); border-color: var(--border-color); color: var(--text-muted);}
+        .board-tile.correct, .board-tile.present, .board-tile.absent {
+            transform: translateY(0);
+            box-shadow: none;
+            color: white;
+            border: none;
+        }
+        .board-tile.correct { background-color: var(--correct); }
+        .board-tile.present { background-color: var(--present); }
+        .board-tile.absent { background-color: var(--absent); opacity: 0.6;}
 
-        #message { margin-top: 24px; font-weight: bold; font-size: 1.3rem; height: 1.5rem; color: var(--accent-color); text-align: center; letter-spacing: 0.5px;}
+        #message { margin-top: 24px; font-weight: 800; font-size: 1.3rem; height: 1.5rem; color: #f8fafc; text-align: center; letter-spacing: 0.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.5);}
 
         /* Debug Menu */
         .debug-container {
             margin-top: 50px;
             padding: 15px;
-            border: 1px dashed var(--border-color);
-            border-radius: 8px;
+            border: 1px dashed rgba(255,255,255,0.2);
+            border-radius: 12px;
             text-align: center;
             background-color: rgba(0,0,0,0.2);
             display: flex;
@@ -191,27 +240,96 @@
             align-items: center;
         }
         .debug-container h3 { margin: 0; font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;}
-        .debug-controls { display: flex; gap: 10px; align-items: center; }
+        .debug-controls { display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap;}
         .debug-btn, select {
-            background: var(--bg-color);
-            border: 1px solid var(--border-color);
-            color: var(--text-muted);
-            padding: 6px 12px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 8px 12px;
             font-size: 0.9rem;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
-            font-family: 'Nunito', sans-serif;
+            font-family: var(--app-font);
             outline: none;
+            font-weight: 700;
         }
-        .debug-btn:hover, select:hover { border-color: var(--active-border); color: var(--text-color);}
+        .debug-btn:hover, select:hover { background: rgba(255,255,255,0.2); }
+        select option { background: #0f172a; color: white; }
         #debugWord { font-size: 1rem; color: var(--correct); visibility: hidden; font-weight: bold; letter-spacing: 2px; text-transform: uppercase;}
+
+        /* Tutorial Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background: linear-gradient(180deg, #1e293b, #0f172a);
+            padding: 40px 30px;
+            border-radius: 20px;
+            border: 2px solid #334155;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            box-sizing: border-box;
+        }
+        .modal-content h2 { margin-top: 0; color: white; font-size: 2rem; letter-spacing: 2px; text-transform: uppercase; font-weight: 900;}
+        .modal-content p { color: var(--text-muted); font-size: 1.1rem; margin-bottom: 25px; }
+        .modal-content ul { 
+            text-align: left; 
+            color: #e2e8f0; 
+            margin-bottom: 30px; 
+            font-size: 1.05rem; 
+            line-height: 1.6; 
+            padding-left: 20px;
+        }
+        .modal-content li { margin-bottom: 15px; }
+        .modal-content li span.highlight { color: var(--accent-color); font-weight: 900; }
+        .close-modal-btn {
+            padding: 16px 28px;
+            font-size: 1.2rem;
+            font-weight: 900;
+            background: var(--accent-color);
+            color: #000;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-family: var(--app-font);
+            box-shadow: 0 5px 0 #b45309;
+            transition: all 0.1s;
+            width: 100%;
+        }
+        .close-modal-btn:active { transform: translateY(5px); box-shadow: 0 0 0 #b45309; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
+    <div id="tutorialModal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>How to Play</h2>
+            <p>Welcome to <strong>Flip-dle</strong>!</p>
+            <ul>
+                <li>Guess the target 5-letter word within 4 tries.</li>
+                <li>You must build your words using <em>only</em> the provided 8-letter bank.</li>
+                <li><strong>The Twist:</strong> Some letters can be physically flipped 180° to create new letters (e.g., flipping <span class="highlight">d</span> creates a <span class="highlight">p</span>).</li>
+                <li>Click the <strong>↻</strong> corner icon on a tile to flip it before adding it to your guess!</li>
+            </ul>
+            <button class="close-modal-btn" onclick="closeTutorial()">Play Now</button>
+        </div>
+    </div>
+
     <h1>Flip-dle</h1>
     <div id="dayIndicator">Day 1</div>
-    <p>Use the 8-letter bank below. Click the corner icon to physically flip letters 180° before building your guess!</p>
+    <p class="subtitle">Use the 8-letter bank below. Click the corner icon to physically flip letters 180° before building your guess!</p>
 
     <div id="board"></div>
     
@@ -220,8 +338,9 @@
     </div>
 
     <div class="controls">
-        <button class="action-btn backspace" onclick="backspace()">Backspace</button>
-        <button class="action-btn" onclick="submitGuess()">Submit</button>
+        <button id="backspaceBtn" class="action-btn backspace" onclick="backspace()">DEL</button>
+        <button id="submitBtn" class="action-btn" onclick="submitGuess()">Submit</button>
+        <button id="shareBtn" class="action-btn share-btn" onclick="shareGame()">Share Score</button>
     </div>
 
     <div id="message"></div>
@@ -238,6 +357,13 @@
                 <option value="5">Day 6</option>
                 <option value="6">Day 7</option>
             </select>
+            
+            <select id="fontSelect" onchange="changeFont()" title="Change Font">
+                <option value="'Nunito', sans-serif">Font: Nunito</option>
+                <option value="'Genos', sans-serif">Font: Genos</option>
+                <option value="'Iceland', sans-serif">Font: Iceland</option>
+            </select>
+
             <button class="debug-btn" onclick="toggleDebug()">Reveal Target</button>
         </div>
         <span id="debugWord"></span>
@@ -245,79 +371,41 @@
 
     <script>
         const gameLevels = [
-            {
-                word: "plumb",
-                bank: [
-                    // Mixed states: p and b are correct at base, n and w need flipping to become u and m
-                    { char: 'p', flipChar: 'd' }, { char: 'l', flipChar: null }, { char: 'n', flipChar: 'u' }, { char: 'w', flipChar: 'm' },
-                    { char: 'b', flipChar: 'q' }, { char: 'a', flipChar: null }, { char: 'e', flipChar: null }, { char: 'r', flipChar: null }
-                ]
-            },
-            {
-                word: "squad",
-                bank: [
-                    // s, u, d are correct. b needs flipping to q.
-                    { char: 's', flipChar: null }, { char: 'b', flipChar: 'q' }, { char: 'u', flipChar: 'n' }, { char: 'a', flipChar: null },
-                    { char: 'd', flipChar: 'p' }, { char: 'e', flipChar: null }, { char: 'r', flipChar: null }, { char: 't', flipChar: null }
-                ]
-            },
-            {
-                word: "crown",
-                bank: [
-                    // c, r, o, n are correct. m needs flipping to w.
-                    { char: 'c', flipChar: null }, { char: 'r', flipChar: null }, { char: 'o', flipChar: null }, { char: 'm', flipChar: 'w' },
-                    { char: 'n', flipChar: 'u' }, { char: 't', flipChar: null }, { char: 'l', flipChar: null }, { char: 'i', flipChar: null }
-                ]
-            },
-            {
-                word: "equip",
-                bank: [
-                    // e, i, q are correct. n and d need flipping to u and p.
-                    { char: 'e', flipChar: null }, { char: 'q', flipChar: 'b' }, { char: 'n', flipChar: 'u' }, { char: 'i', flipChar: null },
-                    { char: 'd', flipChar: 'p' }, { char: 's', flipChar: null }, { char: 'a', flipChar: null }, { char: 'r', flipChar: null }
-                ]
-            },
-            {
-                word: "maple",
-                bank: [
-                    // a, p, l, e are correct. w needs flipping to m.
-                    { char: 'w', flipChar: 'm' }, { char: 'a', flipChar: null }, { char: 'p', flipChar: 'd' }, { char: 'l', flipChar: null },
-                    { char: 'e', flipChar: null }, { char: 't', flipChar: null }, { char: 'o', flipChar: null }, { char: 's', flipChar: null }
-                ]
-            },
-            {
-                word: "blend",
-                bank: [
-                    // b, l, e are correct. u and p need flipping to n and d.
-                    { char: 'b', flipChar: 'q' }, { char: 'l', flipChar: null }, { char: 'e', flipChar: null }, { char: 'u', flipChar: 'n' },
-                    { char: 'p', flipChar: 'd' }, { char: 'c', flipChar: null }, { char: 'k', flipChar: null }, { char: 'y', flipChar: null }
-                ]
-            },
-            {
-                word: "proud",
-                bank: [
-                    // p, r, o, d are correct. n needs flipping to u. (m is a distractor that can flip to w)
-                    { char: 'p', flipChar: 'd' }, { char: 'r', flipChar: null }, { char: 'o', flipChar: null }, { char: 'n', flipChar: 'u' },
-                    { char: 'd', flipChar: 'p' }, { char: 'm', flipChar: 'w' }, { char: 's', flipChar: null }, { char: 't', flipChar: null }
-                ]
-            }
+            { word: "plumb", bank: [{ char: 'p', flipChar: 'd' }, { char: 'l', flipChar: null }, { char: 'n', flipChar: 'u' }, { char: 'w', flipChar: 'm' }, { char: 'b', flipChar: 'q' }, { char: 'a', flipChar: null }, { char: 'e', flipChar: null }, { char: 'r', flipChar: null }] },
+            { word: "squad", bank: [{ char: 's', flipChar: null }, { char: 'b', flipChar: 'q' }, { char: 'u', flipChar: 'n' }, { char: 'a', flipChar: null }, { char: 'd', flipChar: 'p' }, { char: 'e', flipChar: null }, { char: 'r', flipChar: null }, { char: 't', flipChar: null }] },
+            { word: "crown", bank: [{ char: 'c', flipChar: null }, { char: 'r', flipChar: null }, { char: 'o', flipChar: null }, { char: 'm', flipChar: 'w' }, { char: 'n', flipChar: 'u' }, { char: 't', flipChar: null }, { char: 'l', flipChar: null }, { char: 'i', flipChar: null }] },
+            { word: "equip", bank: [{ char: 'e', flipChar: null }, { char: 'q', flipChar: 'b' }, { char: 'n', flipChar: 'u' }, { char: 'i', flipChar: null }, { char: 'd', flipChar: 'p' }, { char: 's', flipChar: null }, { char: 'a', flipChar: null }, { char: 'r', flipChar: null }] },
+            { word: "maple", bank: [{ char: 'w', flipChar: 'm' }, { char: 'a', flipChar: null }, { char: 'p', flipChar: 'd' }, { char: 'l', flipChar: null }, { char: 'e', flipChar: null }, { char: 't', flipChar: null }, { char: 'o', flipChar: null }, { char: 's', flipChar: null }] },
+            { word: "blend", bank: [{ char: 'b', flipChar: 'q' }, { char: 'l', flipChar: null }, { char: 'e', flipChar: null }, { char: 'u', flipChar: 'n' }, { char: 'p', flipChar: 'd' }, { char: 'c', flipChar: null }, { char: 'k', flipChar: null }, { char: 'y', flipChar: null }] },
+            { word: "proud", bank: [{ char: 'p', flipChar: 'd' }, { char: 'r', flipChar: null }, { char: 'o', flipChar: null }, { char: 'n', flipChar: 'u' }, { char: 'd', flipChar: 'p' }, { char: 'm', flipChar: 'w' }, { char: 's', flipChar: null }, { char: 't', flipChar: null }] }
         ];
 
-        const MAX_GUESSES = 6;
+        const MAX_GUESSES = 4;
         let TARGET_WORD = "";
+        let currentDayIndex = 0;
         let currentBankData = [];
         let currentAttempt = 0;
         let currentGuess = []; 
         let gameOver = false;
+        let isWin = false;
+        let isCheckingWord = false;
+
+        function changeFont() {
+            const selectedFont = document.getElementById('fontSelect').value;
+            document.documentElement.style.setProperty('--app-font', selectedFont);
+        }
+
+        function closeTutorial() {
+            document.getElementById('tutorialModal').classList.add('hidden');
+        }
 
         function initGame(dayIndex) {
+            currentDayIndex = dayIndex;
             const level = gameLevels[dayIndex];
             TARGET_WORD = level.word;
             
-            // 1. Copy the bank data
             currentBankData = level.bank.map(item => ({ ...item, isFlipped: false }));
             
-            // 2. Randomize the bank array (Fisher-Yates Shuffle)
             for (let i = currentBankData.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [currentBankData[i], currentBankData[j]] = [currentBankData[j], currentBankData[i]];
@@ -326,10 +414,16 @@
             currentAttempt = 0;
             currentGuess = [];
             gameOver = false;
+            isWin = false;
+            isCheckingWord = false;
             
             document.getElementById('dayIndicator').innerText = `Day ${dayIndex + 1}`;
             document.getElementById('message').innerText = "";
             document.getElementById('debugWord').style.visibility = 'hidden';
+
+            document.getElementById('shareBtn').style.display = 'none';
+            document.getElementById('submitBtn').style.display = 'block';
+            document.getElementById('backspaceBtn').style.display = 'block';
 
             buildBoard();
             buildBank();
@@ -342,6 +436,7 @@
             for (let i = 0; i < MAX_GUESSES; i++) {
                 const row = document.createElement('div');
                 row.className = 'row';
+                row.id = `row-${i}`;
                 for (let j = 0; j < 5; j++) {
                     const tile = document.createElement('div');
                     tile.className = 'board-tile';
@@ -384,7 +479,7 @@
         }
 
         function toggleFlip(index, tileElement) {
-            if (gameOver) return;
+            if (gameOver || isCheckingWord) return;
             const item = currentBankData[index];
             item.isFlipped = !item.isFlipped;
             
@@ -396,7 +491,7 @@
         }
 
         function addLetterToGuess(index) {
-            if (gameOver || currentGuess.length >= 5) return;
+            if (gameOver || isCheckingWord || currentGuess.length >= 5) return;
             const item = currentBankData[index];
             const currentLogicalChar = item.isFlipped ? item.flipChar : item.char;
 
@@ -409,7 +504,7 @@
         }
 
         function backspace() {
-            if (gameOver || currentGuess.length === 0) return;
+            if (gameOver || isCheckingWord || currentGuess.length === 0) return;
             currentGuess.pop();
             updateBoardUI();
         }
@@ -426,10 +521,6 @@
                     if (r >= currentAttempt) {
                         rowNodes[i].className = 'board-tile';
                         
-                        if (r === currentAttempt) {
-                            rowNodes[i].classList.add('active-row');
-                        }
-
                         if (r === currentAttempt && i < currentGuess.length) {
                             const guessItem = currentGuess[i];
                             charSpan.innerText = guessItem.char;
@@ -451,23 +542,66 @@
             }
         }
 
-        function submitGuess() {
-            if (gameOver) return;
+        function triggerShakeAnimation() {
+            const currentRow = document.getElementById(`row-${currentAttempt}`);
+            currentRow.classList.remove('shake');
+            void currentRow.offsetWidth; 
+            currentRow.classList.add('shake');
+            setTimeout(() => currentRow.classList.remove('shake'), 300);
+        }
+
+        async function checkDictionary(word) {
+            try {
+                const response = await fetch(`https://api.datamuse.com/words?sp=${word}&max=1`);
+                const data = await response.json();
+                if (data.length > 0 && data[0].word.toLowerCase() === word.toLowerCase()) {
+                    return true;
+                }
+                return false;
+            } catch (error) {
+                console.warn("Dictionary API failed, allowing word by default.");
+                return true; 
+            }
+        }
+
+        function showShareControls() {
+            document.getElementById('submitBtn').style.display = 'none';
+            document.getElementById('backspaceBtn').style.display = 'none';
+            document.getElementById('shareBtn').style.display = 'block';
+        }
+
+        async function submitGuess() {
+            if (gameOver || isCheckingWord) return;
+            
             if (currentGuess.length !== 5) {
                 showMessage("Not enough letters");
-                
-                const currentRow = document.querySelectorAll('.row')[currentAttempt];
-                currentRow.style.transform = "translateX(-5px)";
-                setTimeout(() => currentRow.style.transform = "translateX(5px)", 100);
-                setTimeout(() => currentRow.style.transform = "translateX(0)", 200);
+                triggerShakeAnimation();
                 return;
             }
 
-            const rowNodes = document.querySelectorAll('.row')[currentAttempt].children;
+            const guessArray = currentGuess.map(g => g.logicalChar); 
+            const finalWordString = guessArray.join('');
+
+            isCheckingWord = true;
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.innerText = "Checking...";
+            submitBtn.disabled = true;
+
+            const isValid = await checkDictionary(finalWordString);
+
+            submitBtn.innerText = "Submit";
+            submitBtn.disabled = false;
+            isCheckingWord = false;
+
+            if (!isValid) {
+                showMessage("Not in word list");
+                triggerShakeAnimation();
+                return;
+            }
+
+            const rowNodes = document.getElementById(`row-${currentAttempt}`).children;
             let targetArray = TARGET_WORD.split('');
-            let guessArray = currentGuess.map(g => g.logicalChar); 
             let colors = new Array(5).fill('absent');
-            let finalWordString = guessArray.join('');
 
             for (let i = 0; i < 5; i++) {
                 if (guessArray[i] === targetArray[i]) {
@@ -486,7 +620,7 @@
             }
 
             for (let i = 0; i < 5; i++) {
-                rowNodes[i].classList.remove('active-row', 'filled');
+                rowNodes[i].classList.remove('filled');
                 setTimeout(() => {
                     rowNodes[i].classList.add(colors[i]);
                 }, i * 150);
@@ -498,14 +632,62 @@
                 if (finalWordString === TARGET_WORD) {
                     showMessage("Genius! You decoded it.");
                     gameOver = true;
+                    isWin = true;
+                    showShareControls();
                 } else if (currentAttempt >= MAX_GUESSES) {
                     showMessage("Game Over. The word was " + TARGET_WORD);
                     gameOver = true;
+                    isWin = false;
+                    showShareControls();
                 } else {
                     currentGuess = []; 
                     updateBoardUI(); 
                 }
             }, 5 * 150 + 100); 
+        }
+
+        function generateShareText() {
+            const attemptStr = isWin ? currentAttempt : 'X';
+            let shareText = `Flip-dle Day ${currentDayIndex + 1} ${attemptStr}/${MAX_GUESSES}\n\n`;
+
+            for (let r = 0; r < currentAttempt; r++) {
+                const rowNodes = document.getElementById(`row-${r}`).children;
+                let rowEmoji = "";
+                for (let i = 0; i < 5; i++) {
+                    if (rowNodes[i].classList.contains('correct')) rowEmoji += "🟩";
+                    else if (rowNodes[i].classList.contains('present')) rowEmoji += "🟨";
+                    else rowEmoji += "⬛";
+                }
+                shareText += rowEmoji + "\n";
+            }
+            
+            shareText += "\nPlay at: https://venvoit.github.io/flippingletters";
+            return shareText;
+        }
+
+        async function shareGame() {
+            const shareText = generateShareText();
+            
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: 'Flip-dle Score',
+                        text: shareText
+                    });
+                } catch (err) {
+                    copyToClipboard(shareText);
+                }
+            } else {
+                copyToClipboard(shareText);
+            }
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showMessage("Copied to clipboard!");
+            }).catch(err => {
+                showMessage("Failed to copy");
+            });
         }
 
         function loadSelectedDay() {
@@ -524,6 +706,10 @@
         }
 
         document.addEventListener("keydown", (e) => {
+            if (!document.getElementById('tutorialModal').classList.contains('hidden')) {
+                if (e.key === "Enter") closeTutorial();
+                return;
+            }
             if (e.key === "Backspace") backspace();
             if (e.key === "Enter") submitGuess();
         });
