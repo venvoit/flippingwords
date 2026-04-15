@@ -7,7 +7,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Genos:wght@500;700;800&family=Iceland&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
     <style>
         :root {
+            /* Default Font */
             --app-font: 'Genos', sans-serif;
+            
+            /* Branding */
             --bg-gradient: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
             --board-bg: rgba(255, 255, 255, 0.08);
             --bank-bg: rgba(0, 0, 0, 0.2);
@@ -15,6 +18,7 @@
             --text-color: #ffffff;
             --text-muted: #cbd5e1;
             
+            /* Physical Tile Look */
             --tile-bg: #f8fafc;
             --tile-text: #0f172a;
             --tile-border: #e2e8f0;
@@ -23,6 +27,7 @@
             --active-border: #38bdf8;
             --accent-color: #fbbf24; 
             
+            /* Graded Colors */
             --correct: #22c55e;
             --present: #eab308;
             --absent: #64748b;
@@ -277,14 +282,29 @@
         function closeTutorial() { document.getElementById('tutorialModal').classList.add('hidden'); }
         function changeFont() { document.documentElement.style.setProperty('--app-font', document.getElementById('fontSelect').value); }
 
+        // --- Game Logic ---
+        // UPDATED: Strict No-Duplicate Flip Pair Data + Decoy Vowels Included
         const gameLevels = [
-            { word: "plumb", bank: [{ char: 'p', flipChar: 'd' }, { char: 'l', flipChar: null }, { char: 'n', flipChar: 'u' }, { char: 'w', flipChar: 'm' }, { char: 'b', flipChar: 'q' }, { char: 'c', flipChar: null }, { char: 'h', flipChar: null }, { char: 'r', flipChar: null }] },
-            { word: "squad", bank: [{ char: 's', flipChar: null }, { char: 'b', flipChar: 'q' }, { char: 'u', flipChar: 'n' }, { char: 'a', flipChar: 'e' }, { char: 'd', flipChar: 'p' }, { char: 'f', flipChar: null }, { char: 'r', flipChar: null }, { char: 't', flipChar: null }] },
-            { word: "crown", bank: [{ char: 'c', flipChar: null }, { char: 'r', flipChar: null }, { char: 'o', flipChar: null }, { char: 'm', flipChar: 'w' }, { char: 'n', flipChar: 'u' }, { char: 't', flipChar: null }, { char: 'l', flipChar: null }, { char: 'i', flipChar: null }] },
-            { word: "equip", bank: [{ char: 'e', flipChar: 'a' }, { char: 'q', flipChar: 'b' }, { char: 'n', flipChar: 'u' }, { char: 'i', flipChar: null }, { char: 'd', flipChar: 'p' }, { char: 's', flipChar: null }, { char: 'g', flipChar: null }, { char: 'r', flipChar: null }] },
-            { word: "maple", bank: [{ char: 'w', flipChar: 'm' }, { char: 'a', flipChar: 'e' }, { char: 'p', flipChar: 'd' }, { char: 'l', flipChar: null }, { char: 'c', flipChar: null }, { char: 't', flipChar: null }, { char: 'o', flipChar: null }, { char: 's', flipChar: null }] },
-            { word: "blend", bank: [{ char: 'b', flipChar: 'q' }, { char: 'l', flipChar: null }, { char: 'e', flipChar: 'a' }, { char: 'u', flipChar: 'n' }, { char: 'p', flipChar: 'd' }, { char: 'c', flipChar: null }, { char: 'k', flipChar: null }, { char: 'y', flipChar: null }] },
-            { word: "proud", bank: [{ char: 'p', flipChar: 'd' }, { char: 'r', flipChar: null }, { char: 'o', flipChar: null }, { char: 'n', flipChar: 'u' }, { char: 'c', flipChar: null }, { char: 'm', flipChar: 'w' }, { char: 's', flipChar: null }, { char: 't', flipChar: null }] }
+            // plumb: p(d), l, u(n), m(w), b(q) | Decoys: o, a(e), s
+            { word: "plumb", bank: [{ char: 'd', flipChar: 'p' }, { char: 'l', flipChar: null }, { char: 'n', flipChar: 'u' }, { char: 'w', flipChar: 'm' }, { char: 'q', flipChar: 'b' }, { char: 'o', flipChar: null }, { char: 'a', flipChar: 'e' }, { char: 's', flipChar: null }] },
+            
+            // squad: s, q(b), u(n), a(e), d(p) | Decoys: o, i, t
+            { word: "squad", bank: [{ char: 's', flipChar: null }, { char: 'b', flipChar: 'q' }, { char: 'n', flipChar: 'u' }, { char: 'e', flipChar: 'a' }, { char: 'p', flipChar: 'd' }, { char: 'o', flipChar: null }, { char: 'i', flipChar: null }, { char: 't', flipChar: null }] },
+            
+            // crown: c, r, o, w(m), n(u) | Decoys: a(e), l, s
+            { word: "crown", bank: [{ char: 'c', flipChar: null }, { char: 'r', flipChar: null }, { char: 'o', flipChar: null }, { char: 'm', flipChar: 'w' }, { char: 'u', flipChar: 'n' }, { char: 'a', flipChar: 'e' }, { char: 'l', flipChar: null }, { char: 's', flipChar: null }] },
+            
+            // equip: e(a), q(b), u(n), i, p(d) | Decoys: o, r, s
+            { word: "equip", bank: [{ char: 'a', flipChar: 'e' }, { char: 'b', flipChar: 'q' }, { char: 'n', flipChar: 'u' }, { char: 'i', flipChar: null }, { char: 'd', flipChar: 'p' }, { char: 'o', flipChar: null }, { char: 'r', flipChar: null }, { char: 's', flipChar: null }] },
+            
+            // clamp: c, l, a(e), m(w), p(d) | Decoys: o, i, r (Replaced 'maple' due to a/e conflict)
+            { word: "clamp", bank: [{ char: 'c', flipChar: null }, { char: 'l', flipChar: null }, { char: 'e', flipChar: 'a' }, { char: 'w', flipChar: 'm' }, { char: 'd', flipChar: 'p' }, { char: 'o', flipChar: null }, { char: 'i', flipChar: null }, { char: 'r', flipChar: null }] },
+            
+            // blend: b(q), l, e(a), n(u), d(p) | Decoys: o, i, r
+            { word: "blend", bank: [{ char: 'q', flipChar: 'b' }, { char: 'l', flipChar: null }, { char: 'a', flipChar: 'e' }, { char: 'u', flipChar: 'n' }, { char: 'p', flipChar: 'd' }, { char: 'o', flipChar: null }, { char: 'i', flipChar: null }, { char: 'r', flipChar: null }] },
+            
+            // blank: b(q), l, a(e), n(u), k | Decoys: i, o, s (Replaced 'proud' due to p/d conflict)
+            { word: "blank", bank: [{ char: 'q', flipChar: 'b' }, { char: 'l', flipChar: null }, { char: 'e', flipChar: 'a' }, { char: 'u', flipChar: 'n' }, { char: 'k', flipChar: null }, { char: 'i', flipChar: null }, { char: 'o', flipChar: null }, { char: 's', flipChar: null }] }
         ];
 
         const MAX_GUESSES = 4;
@@ -457,54 +477,40 @@
             setTimeout(() => currentRow.classList.remove('shake'), 300);
         }
 
-        // --- MASSIVE CELEBRATION SYSTEM ---
         function triggerMassiveCelebration() {
-            // 1. Tile Dance
             const rowNodes = document.getElementById(`row-${currentAttempt}`).children;
             for (let i = 0; i < 5; i++) {
-                setTimeout(() => {
-                    rowNodes[i].classList.add('win-dance');
-                }, i * 100);
+                setTimeout(() => { rowNodes[i].classList.add('win-dance'); }, i * 100);
             }
 
-            // 2. Full-screen Canvas Fireworks
             setTimeout(() => {
                 const canvas = document.createElement('canvas');
-                canvas.style.position = 'fixed';
-                canvas.style.top = '0';
-                canvas.style.left = '0';
-                canvas.style.width = '100vw';
-                canvas.style.height = '100vh';
-                canvas.style.pointerEvents = 'none'; // Let clicks pass through
-                canvas.style.zIndex = '9999';
+                canvas.style.position = 'fixed'; canvas.style.top = '0'; canvas.style.left = '0';
+                canvas.style.width = '100vw'; canvas.style.height = '100vh';
+                canvas.style.pointerEvents = 'none'; canvas.style.zIndex = '9999';
                 document.body.appendChild(canvas);
 
                 const ctx = canvas.getContext('2d');
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
+                canvas.width = window.innerWidth; canvas.height = window.innerHeight;
 
                 const particles = [];
                 const colors = ['#fbbf24', '#38bdf8', '#22c55e', '#f43f5e', '#a855f7', '#ffffff'];
 
-                // Create 3 huge cascading bursts
                 for (let b = 0; b < 3; b++) {
                     setTimeout(() => {
                         const originX = canvas.width / 2 + (Math.random() - 0.5) * 300;
                         const originY = canvas.height / 3 + (Math.random() - 0.5) * 200;
-                        
                         for (let i = 0; i < 180; i++) {
                             particles.push({
-                                x: originX,
-                                y: originY,
+                                x: originX, y: originY,
                                 vx: (Math.random() - 0.5) * (Math.random() * 25 + 5),
                                 vy: (Math.random() - 0.5) * (Math.random() * 25 + 5),
                                 size: Math.random() * 6 + 2,
                                 color: colors[Math.floor(Math.random() * colors.length)],
-                                alpha: 1,
-                                decay: Math.random() * 0.015 + 0.005
+                                alpha: 1, decay: Math.random() * 0.015 + 0.005
                             });
                         }
-                    }, b * 400); // Stagger the bursts
+                    }, b * 400); 
                 }
 
                 function animate() {
@@ -514,28 +520,18 @@
                         let p = particles[i];
                         if (p.alpha <= 0) continue;
                         active = true;
-                        p.vy += 0.2; // gravity pulling down
-                        p.vx *= 0.98; // horizontal friction
-                        p.vy *= 0.98; // vertical friction
-                        p.x += p.vx;
-                        p.y += p.vy;
-                        p.alpha -= p.decay;
+                        p.vy += 0.2; p.vx *= 0.98; p.vy *= 0.98;
+                        p.x += p.vx; p.y += p.vy; p.alpha -= p.decay;
 
                         ctx.globalAlpha = Math.max(0, p.alpha);
                         ctx.fillStyle = p.color;
-                        ctx.beginPath();
-                        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                        ctx.fill();
+                        ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
                     }
-                    
-                    if (active || particles.length < 500) { 
-                        requestAnimationFrame(animate);
-                    } else {
-                        canvas.remove(); // Cleanup canvas when done
-                    }
+                    if (active || particles.length < 500) { requestAnimationFrame(animate); } 
+                    else { canvas.remove(); }
                 }
                 animate();
-            }, 500); // Start fireworks just after the tiles finish jumping
+            }, 500); 
         }
 
         async function checkDictionary(word) {
@@ -546,7 +542,6 @@
             } catch (error) { return true; }
         }
 
-        // Updated triggerEndState to accept a dynamic delay so we can wait for the fireworks
         function triggerEndState(delayMs = 1500) {
             setTimeout(() => {
                 document.getElementById('gameArea').style.display = 'none';
@@ -560,77 +555,51 @@
 
         async function submitGuess() {
             if (gameOver || isCheckingWord) return;
-            
-            if (currentGuess.length !== 5) {
-                showMessage("Not enough letters");
-                triggerShakeAnimation();
-                return;
-            }
+            if (currentGuess.length !== 5) { showMessage("Not enough letters"); triggerShakeAnimation(); return; }
 
             const guessArray = currentGuess.map(g => g.logicalChar); 
             const finalWordString = guessArray.join('');
 
             isCheckingWord = true;
             const submitBtn = document.getElementById('submitBtn');
-            submitBtn.innerText = "Checking...";
-            submitBtn.disabled = true;
+            submitBtn.innerText = "Checking..."; submitBtn.disabled = true;
 
             const isValid = await checkDictionary(finalWordString);
 
-            submitBtn.innerText = "Submit";
-            submitBtn.disabled = false;
-            isCheckingWord = false;
+            submitBtn.innerText = "Submit"; submitBtn.disabled = false; isCheckingWord = false;
 
-            if (!isValid) {
-                showMessage("Not in word list");
-                triggerShakeAnimation();
-                return;
-            }
+            if (!isValid) { showMessage("Not in word list"); triggerShakeAnimation(); return; }
 
             const rowNodes = document.getElementById(`row-${currentAttempt}`).children;
             let targetArray = TARGET_WORD.split('');
             let colors = new Array(5).fill('absent');
 
             for (let i = 0; i < 5; i++) {
-                if (guessArray[i] === targetArray[i]) {
-                    colors[i] = 'correct';
-                    targetArray[i] = null; 
-                }
+                if (guessArray[i] === targetArray[i]) { colors[i] = 'correct'; targetArray[i] = null; }
             }
-
             for (let i = 0; i < 5; i++) {
                 if (colors[i] === 'correct') continue;
                 let targetIndex = targetArray.indexOf(guessArray[i]);
-                if (targetIndex !== -1) {
-                    colors[i] = 'present';
-                    targetArray[targetIndex] = null; 
-                }
+                if (targetIndex !== -1) { colors[i] = 'present'; targetArray[targetIndex] = null; }
             }
-
             for (let i = 0; i < 5; i++) {
                 rowNodes[i].classList.remove('filled', 'active-row');
-                setTimeout(() => {
-                    rowNodes[i].classList.add(colors[i]);
-                }, i * 150);
+                setTimeout(() => { rowNodes[i].classList.add(colors[i]); }, i * 150);
             }
 
             setTimeout(() => {
                 if (finalWordString === TARGET_WORD) {
                     showMessage("Genius! You decoded it.");
-                    gameOver = true;
-                    isWin = true;
-                    triggerMassiveCelebration(); // Launch fireworks
-                    triggerEndState(3500); // Give the fireworks 3.5 seconds to play out before the end screen
-                } else if (currentAttempt >= MAX_GUESSES - 1) { // Adjusted logic check for currentAttempt incrementing later
+                    gameOver = true; isWin = true;
+                    triggerMassiveCelebration(); 
+                    triggerEndState(3500); 
+                } else if (currentAttempt >= MAX_GUESSES - 1) { 
                     showMessage("Game Over. The word was " + TARGET_WORD.toUpperCase());
-                    gameOver = true;
-                    isWin = false;
+                    gameOver = true; isWin = false;
                     currentAttempt++;
                     triggerEndState(1500);
                 } else {
-                    currentAttempt++;
-                    currentGuess = []; 
-                    updateBoardUI(); 
+                    currentAttempt++; currentGuess = []; updateBoardUI(); 
                 }
             }, 5 * 150 + 100); 
         }
@@ -638,8 +607,7 @@
         function generateShareText() {
             const attemptStr = isWin ? currentAttempt + 1 : 'X';
             let shareText = `SPIN-DLE #${currentPuzzleNumber} ${attemptStr}/${MAX_GUESSES}\n\n`;
-
-            for (let r = 0; r <= currentAttempt; r++) { // Updated bounds to match actual attempts made
+            for (let r = 0; r <= currentAttempt; r++) { 
                 if (r >= MAX_GUESSES) break;
                 const rowNodes = document.getElementById(`row-${r}`).children;
                 let rowEmoji = "";
@@ -662,10 +630,7 @@
             } else { copyToClipboard(shareText); }
         }
 
-        function copyToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => showMessage("Copied to clipboard!")).catch(err => showMessage("Failed to copy"));
-        }
-
+        function copyToClipboard(text) { navigator.clipboard.writeText(text).then(() => showMessage("Copied to clipboard!")).catch(err => showMessage("Failed to copy")); }
         function toggleDebug() {
             const debugText = document.getElementById('debugWord');
             debugText.style.visibility = debugText.style.visibility === 'visible' ? 'hidden' : 'visible';
@@ -674,8 +639,7 @@
 
         document.addEventListener("keydown", (e) => {
             if (!document.getElementById('tutorialModal').classList.contains('hidden')) {
-                if (e.key === "Enter") closeTutorial();
-                return;
+                if (e.key === "Enter") closeTutorial(); return;
             }
             if (e.key === "Backspace") backspace();
             if (e.key === "Enter") submitGuess();
