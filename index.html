@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Flipping Letters - Play Now</title>
     <link href="https://fonts.googleapis.com/css2?family=Tourney:wght@700;900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Monomaniac+One&display=swap" rel="stylesheet">
@@ -35,32 +35,44 @@
             margin: 0; padding: 15px 20px 80px 20px;
             min-height: 100vh; user-select: none; box-sizing: border-box;
             transition: font-family 0.2s ease; overflow-x: hidden;
+            touch-action: manipulation;
         }
 
-        /* --- COMPACT ANIMATED TITLE --- */
+        /* --- THE MAGICAL MORPHING TITLE --- */
         h1 { 
-            margin: 0 0 5px 0; 
-            font-size: 2.2rem; /* Reduced for screen real estate */
-            font-weight: 900; 
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3); 
-            text-transform: lowercase; 
-            text-align: center;
-            will-change: transform;
-            line-height: 1.1;
+            margin: 0 0 5px 0; font-size: 2.2rem; font-weight: 900; 
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3); text-transform: lowercase; 
+            text-align: center; will-change: transform; line-height: 1.1;
         }
 
-        .title-spin { 
-            display: inline-block;
-            color: var(--accent-color); 
-            transform-origin: center center;
+        .title-spin-wrapper {
+            position: relative;
+            display: inline-flex; align-items: center; justify-content: center;
         }
 
-        .title-spin.do-spin { animation: flipTitle 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .title-front { display: inline-block; color: var(--accent-color); transform-origin: center center; }
+        .title-back { 
+            position: absolute; color: var(--accent-color); transform-origin: center center;
+            transform: rotate(-180deg); opacity: 0; 
+        }
 
-        @keyframes flipTitle {
-            0% { transform: rotate(0deg); color: var(--accent-color); }
-            50% { color: var(--text-color); }
-            100% { transform: rotate(180deg); color: var(--text-color); }
+        /* The secret sauce: The rotation takes 1.2s. 
+           The opacity instantly swaps from 1 to 0 at exactly 50% (0.6s) mid-spin! 
+        */
+        .title-front.do-spin { animation: titleSpinOut 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .title-back.do-spin { animation: titleSpinIn 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
+        @keyframes titleSpinOut {
+            0% { transform: rotate(0deg); opacity: 1; color: var(--accent-color); }
+            49% { opacity: 1; }
+            50% { opacity: 0; color: var(--text-color); }
+            100% { transform: rotate(180deg); opacity: 0; color: var(--text-color); }
+        }
+        @keyframes titleSpinIn {
+            0% { transform: rotate(-180deg); opacity: 0; color: var(--accent-color); }
+            49% { opacity: 0; }
+            50% { opacity: 1; color: var(--text-color); }
+            100% { transform: rotate(0deg); opacity: 1; color: var(--text-color); }
         }
 
         .h1-bounce { animation: bounceIn 0.6s cubic-bezier(0.36, 0, 0.66, -0.56) forwards; }
@@ -89,28 +101,43 @@
             font-size: 2.5rem; font-weight: 800; text-transform: lowercase; box-sizing: border-box;
         }
 
+        /* The Board tiles just display the real letter now, no flip logic needed! */
         .board-tile {
             background-color: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2); 
             color: var(--tile-text); transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        
         .board-tile.filled { 
             background-color: var(--tile-bg); border: none; box-shadow: 0 4px 0 var(--tile-shadow);
             transform: translateY(-2px); animation: pop 0.2s ease-out; 
         }
 
+        /* --- THE MAGICAL MORPHING BANK TILES --- */
         .bank-tile {
             position: relative; background-color: var(--tile-bg); color: var(--tile-text);
             cursor: pointer; box-shadow: 0 4px 0 var(--tile-shadow); transition: all 0.1s;
+            touch-action: manipulation;
         }
         .bank-tile:hover { transform: translateY(-2px); box-shadow: 0 6px 0 var(--tile-shadow); }
         .bank-tile:active { transform: translateY(4px); box-shadow: 0 0 0 var(--tile-shadow); }
 
-        .char-span { 
-            display: inline-block; transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s; margin-top: 5px;
+        .char-container {
+            position: relative; width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
         }
-        
-        .flipped .char-span { transform: rotate(180deg); margin-top: -5px; }
+
+        /* The 0s transition on opacity, delayed by 0.2s, forces the instant swap mid-spin */
+        .char-front, .char-back {
+            position: absolute; line-height: 1; margin-top: 5px;
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0s 0.2s;
+        }
+        .char-front { transform: rotate(0deg); opacity: 1; }
+        .char-back { transform: rotate(-180deg); opacity: 0; }
+
+        .bank-tile.flipped .char-front { transform: rotate(180deg); opacity: 0; }
+        .bank-tile.flipped .char-back { transform: rotate(0deg); opacity: 1; }
+
+        /* Board Tile text styling */
+        .board-tile .char-span { margin-top: 5px; display: inline-block; }
         .board-tile.correct .char-span, .board-tile.present .char-span, .board-tile.absent .char-span { color: #ffffff !important; }
 
         @keyframes pop { 0% { transform: scale(1) translateY(0); } 50% { transform: scale(1.1) translateY(-4px); } 100% { transform: scale(1) translateY(-2px); } }
@@ -135,7 +162,7 @@
             color: #38bdf8; font-size: 1rem; font-weight: bold; cursor: pointer; padding: 0; line-height: 1;
             border-radius: 50%; transition: all 0.2s; width: 24px; height: 24px; display: flex;
             justify-content: center; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 2;
-            font-family: sans-serif;
+            font-family: sans-serif; touch-action: manipulation;
         }
         .flip-btn:hover { color: #0f172a; background: #38bdf8; transform: scale(1.15) rotate(90deg); }
 
@@ -145,6 +172,7 @@
             padding: 14px 18px; font-size: 1.3rem; font-weight: 800; background: var(--correct); color: white;
             border: none; border-radius: 12px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
             font-family: var(--app-font); box-shadow: 0 5px 0 #15803d; transition: all 0.1s; flex: 1;
+            touch-action: manipulation;
         }
         button.action-btn:active { transform: translateY(5px); box-shadow: 0 0 0 #15803d; }
         button.action-btn:disabled { opacity: 0.7; cursor: not-allowed; transform: none; box-shadow: 0 5px 0 #15803d; }
@@ -173,6 +201,7 @@
             background: linear-gradient(90deg, #1e3a8a 0%, #3b82f6 100%); color: white; text-decoration: none;
             padding: 12px 20px; box-sizing: border-box; display: flex; justify-content: center; align-items: center;
             z-index: 9000; box-shadow: 0 -4px 15px rgba(0,0,0,0.4); border-top: 1px solid #60a5fa;
+            touch-action: manipulation;
         }
         .banner-content { display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 450px; gap: 15px; }
         .banner-img { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
@@ -201,7 +230,7 @@
         .modal-content ul { text-align: left; color: #e2e8f0; margin-bottom: 30px; font-size: 1.3rem; line-height: 1.3; padding-left: 20px; }
         .modal-content li { margin-bottom: 15px; }
         .modal-content li span.highlight { color: var(--accent-color); font-weight: 800; }
-        .close-modal-btn { padding: 16px 28px; font-size: 1.4rem; font-weight: 800; background: var(--accent-color); color: #000; border: none; border-radius: 12px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; font-family: var(--app-font); box-shadow: 0 5px 0 #b45309; transition: all 0.1s; width: 100%; }
+        .close-modal-btn { padding: 16px 28px; font-size: 1.4rem; font-weight: 800; background: var(--accent-color); color: #000; border: none; border-radius: 12px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; font-family: var(--app-font); box-shadow: 0 5px 0 #b45309; transition: all 0.1s; width: 100%; touch-action: manipulation; }
         .close-modal-btn:active { transform: translateY(5px); box-shadow: 0 0 0 #b45309; }
         .hidden { display: none !important; }
     </style>
@@ -223,7 +252,11 @@
     </div>
 
     <h1 id="mainTitle" aria-label="Flipping Letters">
-        fli<span class="title-spin" aria-hidden="true">d</span><span class="title-spin" aria-hidden="true">d</span>ing letters
+        fli<span class="title-spin-wrapper" aria-hidden="true">
+            <span class="title-front">d</span><span class="title-back">p</span>
+        </span><span class="title-spin-wrapper" aria-hidden="true">
+            <span class="title-front">d</span><span class="title-back">p</span>
+        </span>ing letters
     </h1>
     
     <p class="subtitle" id="subtitleText">Guess today's word!<br>Tap the spin button to rotate letters 180°!</p>
@@ -302,8 +335,7 @@
             { word: "bacon", bank: [{ char: 'q', flipChar: 'b' }, { char: 'e', flipChar: 'a' }, { char: 'c', flipChar: null }, { char: 'o', flipChar: null }, { char: 'u', flipChar: 'n' }, { char: 's', flipChar: null }, { char: 't', flipChar: null }, { char: 'i', flipChar: null }, { char: 'r', flipChar: null }, { char: 'l', flipChar: null }] }
         ];
 
-        // LOCAL DICTIONARY: Fallback set ensures valid answers always work offline/without API.
-        // TO UPGRADE: Create a 'valid-words.json' file with ["apple", "crane", ...] in the same folder.
+        // LOCAL DICTIONARY
         const validWords = new Set(gameLevels.map(level => level.word));
 
         async function loadLocalDictionary() {
@@ -318,7 +350,7 @@
             }
         }
 
-        // PRNG (Mulberry32) for perfectly stable cross-browser shuffling
+        // PRNG
         function mulberry32(a) {
             return function() {
                 var t = a += 0x6D2B79F5;
@@ -328,29 +360,20 @@
             }
         }
 
-        // --- STATE ARCHITECTURE ---
+        // STATE ARCHITECTURE
         const state = {
-            puzzleNumber: 1,
-            targetWord: "",
-            status: "PLAYING", // 'PLAYING', 'CHECKING', 'WON', 'LOST'
-            currentRow: 0,
-            board: Array.from({length: MAX_GUESSES}, () => []), // Arrays of { char, isFlipped, status }
-            bank: [] // Array of { char, flipChar, isFlipped }
+            puzzleNumber: 1, targetWord: "", status: "PLAYING", currentRow: 0,
+            board: Array.from({length: MAX_GUESSES}, () => []),
+            bank: [] 
         };
 
-        // --- DOM ELEMENTS ---
         const els = {
-            board: document.getElementById('board'),
-            bank: document.getElementById('bank'),
-            message: document.getElementById('message'),
-            endMessage: document.getElementById('endMessage'),
-            submitBtn: document.getElementById('submitBtn'),
-            backspaceBtn: document.getElementById('backspaceBtn'),
-            shareBtn: document.getElementById('shareBtn'),
-            bankContainer: document.getElementById('bank-container')
+            board: document.getElementById('board'), bank: document.getElementById('bank'),
+            message: document.getElementById('message'), endMessage: document.getElementById('endMessage'),
+            submitBtn: document.getElementById('submitBtn'), backspaceBtn: document.getElementById('backspaceBtn'),
+            shareBtn: document.getElementById('shareBtn'), bankContainer: document.getElementById('bank-container')
         };
 
-        // --- INITIALIZATION ---
         function initGame(overrideIndex = null) {
             const launchDate = new Date(Date.UTC(2026, 3, 15)); 
             const now = new Date();
@@ -366,7 +389,6 @@
             state.currentRow = 0;
             state.board = Array.from({length: MAX_GUESSES}, () => []);
             
-            // Seeded shuffle ensures bank order is identical across all browsers for the same day
             const random = mulberry32(state.puzzleNumber);
             let rawBank = gameLevels[levelIndex].bank.map(item => ({ ...item, isFlipped: false }));
             for (let i = rawBank.length - 1; i > 0; i--) {
@@ -375,20 +397,13 @@
             }
             state.bank = rawBank;
 
-            // Reset UI Visibility
-            els.bankContainer.style.display = 'block';
-            els.endMessage.style.display = 'none';
-            els.message.style.display = 'block';
-            els.shareBtn.style.display = 'none';
-            els.submitBtn.style.display = 'block';
-            els.backspaceBtn.style.display = 'block';
-            els.message.innerText = "";
-            document.getElementById('debugWord').style.visibility = 'hidden';
-            
-            document.body.style.pointerEvents = 'auto'; // Unlock input
+            els.bankContainer.style.display = 'block'; els.endMessage.style.display = 'none';
+            els.message.style.display = 'block'; els.shareBtn.style.display = 'none';
+            els.submitBtn.style.display = 'block'; els.backspaceBtn.style.display = 'block';
+            els.message.innerText = ""; document.getElementById('debugWord').style.visibility = 'hidden';
+            document.body.style.pointerEvents = 'auto'; 
 
-            initDOM();
-            render();
+            initDOM(); render();
         }
 
         function initDOM() {
@@ -412,24 +427,35 @@
                 tile.className = 'bank-tile'; tile.id = `bank-tile-${index}`;
                 tile.setAttribute('role', 'button'); tile.setAttribute('tabindex', '0');
                 
-                const charSpan = document.createElement('span'); charSpan.className = 'char-span';
-                tile.appendChild(charSpan);
+                // NEW: Magical Morphing Container
+                const charContainer = document.createElement('div');
+                charContainer.className = 'char-container';
+
+                const charFront = document.createElement('span');
+                charFront.className = 'char-front';
+                charFront.innerText = item.char;
+                charContainer.appendChild(charFront);
 
                 if (item.flipChar) {
+                    const charBack = document.createElement('span');
+                    charBack.className = 'char-back';
+                    charBack.innerText = item.flipChar; // The secret real letter!
+                    charContainer.appendChild(charBack);
+
                     const flipBtn = document.createElement('button');
                     flipBtn.className = 'flip-btn'; flipBtn.innerHTML = '↻';
                     flipBtn.setAttribute('aria-label', `Spin letter`);
                     flipBtn.addEventListener('click', (e) => { e.stopPropagation(); handleFlip(index); });
                     tile.appendChild(flipBtn);
                 }
+                tile.appendChild(charContainer);
                 tile.addEventListener('click', () => handleAddLetter(index));
                 els.bank.appendChild(tile);
             });
         }
 
-        // --- RENDER (Sync DOM to State) ---
         function render() {
-            // Render Board
+            // Render Board (Using logicalChar natively now!)
             for (let r = 0; r < MAX_GUESSES; r++) {
                 const rowState = state.board[r];
                 const rowEl = document.getElementById(`row-${r}`);
@@ -439,14 +465,12 @@
                     const tileEl = document.getElementById(`tile-${r}-${i}`);
                     const spanEl = tileEl.querySelector('.char-span');
                     
-                    // Reset classes safely
                     tileEl.className = 'board-tile';
                     if (r === state.currentRow && state.status === "PLAYING") tileEl.classList.add('active-row');
                     
                     if (tileState) {
-                        spanEl.innerText = tileState.char;
+                        spanEl.innerText = tileState.logicalChar; // perfectly straight!
                         tileEl.classList.add('filled');
-                        if (tileState.isFlipped) tileEl.classList.add('flipped');
                         if (tileState.status && tileState.status !== 'tbd') tileEl.classList.add(tileState.status);
                     } else {
                         spanEl.innerText = "";
@@ -454,11 +478,9 @@
                 }
             }
 
-            // Render Bank
+            // Render Bank (Toggles the CSS magical morph)
             state.bank.forEach((item, index) => {
                 const tileEl = document.getElementById(`bank-tile-${index}`);
-                const spanEl = tileEl.querySelector('.char-span');
-                spanEl.innerText = item.char;
                 item.isFlipped ? tileEl.classList.add('flipped') : tileEl.classList.remove('flipped');
             });
         }
@@ -474,14 +496,11 @@
             setTimeout(() => rowEl.classList.remove('shake'), SHAKE_DELAY_MS);
         }
 
-        // --- INTERACTION LOGIC ---
         function handleAddLetter(index) {
             if (state.status !== "PLAYING" || state.board[state.currentRow].length >= WORD_LENGTH) return;
             const item = state.bank[index];
             state.board[state.currentRow].push({
-                char: item.char,
                 logicalChar: item.isFlipped ? item.flipChar : item.char,
-                isFlipped: item.isFlipped,
                 status: 'tbd'
             });
             render();
@@ -509,40 +528,32 @@
 
             const guessString = currentRowData.map(g => g.logicalChar).join('');
 
-            // Lock Input
             state.status = "CHECKING";
             els.submitBtn.innerText = "Checking..."; els.submitBtn.disabled = true;
             document.body.style.pointerEvents = 'none'; 
 
-            // Validate against Local Dictionary
             if (!validWords.has(guessString)) {
                 showMessage("Not in word list"); triggerRowShake();
                 unlockInput(); return;
             }
 
-            // Grading Logic
             let targetArray = state.targetWord.split('');
             
-            // Pass 1: Correct (Green)
             for (let i = 0; i < WORD_LENGTH; i++) {
                 if (currentRowData[i].logicalChar === targetArray[i]) {
-                    currentRowData[i].status = 'correct';
-                    targetArray[i] = null; 
+                    currentRowData[i].status = 'correct'; targetArray[i] = null; 
                 }
             }
-            // Pass 2: Present (Yellow)
             for (let i = 0; i < WORD_LENGTH; i++) {
                 if (currentRowData[i].status === 'correct') continue;
                 let targetIndex = targetArray.indexOf(currentRowData[i].logicalChar);
                 if (targetIndex !== -1) {
-                    currentRowData[i].status = 'present';
-                    targetArray[targetIndex] = null; 
+                    currentRowData[i].status = 'present'; targetArray[targetIndex] = null; 
                 } else {
                     currentRowData[i].status = 'absent';
                 }
             }
 
-            // Animate Results Staggered
             const rowEl = document.getElementById(`row-${state.currentRow}`);
             for (let i = 0; i < WORD_LENGTH; i++) {
                 setTimeout(() => {
@@ -552,7 +563,6 @@
                 }, i * ANIMATION_DELAY_MS);
             }
 
-            // Evaluate Win/Loss after animation finishes
             setTimeout(() => {
                 if (guessString === state.targetWord) {
                     state.status = "WON"; handleEndGame();
@@ -571,7 +581,7 @@
         }
 
         function handleEndGame() {
-            document.body.style.pointerEvents = 'auto'; // Unlock global click for sharing
+            document.body.style.pointerEvents = 'auto';
             if (state.status === "WON") {
                 const rowNodes = document.getElementById(`row-${state.currentRow}`).children;
                 for (let i = 0; i < WORD_LENGTH; i++) {
@@ -581,18 +591,13 @@
             }
 
             setTimeout(() => {
-                els.message.style.display = 'none';
-                els.bankContainer.style.display = 'none';
-                els.submitBtn.style.display = 'none';
-                els.backspaceBtn.style.display = 'none';
+                els.message.style.display = 'none'; els.bankContainer.style.display = 'none';
+                els.submitBtn.style.display = 'none'; els.backspaceBtn.style.display = 'none';
                 
-                if (state.status === "WON") {
-                    els.endMessage.innerText = "Well done!";
-                } else {
-                    els.endMessage.innerText = "Unlucky!\nThe word was " + state.targetWord.toUpperCase();
-                }
-                els.endMessage.style.display = 'block';
-                els.shareBtn.style.display = 'block';
+                if (state.status === "WON") { els.endMessage.innerText = "Well done!"; } 
+                else { els.endMessage.innerText = "Unlucky!\nThe word was " + state.targetWord.toUpperCase(); }
+                
+                els.endMessage.style.display = 'block'; els.shareBtn.style.display = 'block';
             }, state.status === "WON" ? 3500 : 1500); 
         }
 
@@ -619,8 +624,7 @@
                                 x: originX, y: originY,
                                 vx: (Math.random() - 0.5) * (Math.random() * 25 + 5),
                                 vy: (Math.random() - 0.5) * (Math.random() * 25 + 5),
-                                size: Math.random() * 6 + 2,
-                                color: colors[Math.floor(Math.random() * colors.length)],
+                                size: Math.random() * 6 + 2, color: colors[Math.floor(Math.random() * colors.length)],
                                 alpha: 1, decay: Math.random() * 0.015 + 0.005
                             });
                         }
@@ -629,15 +633,13 @@
 
                 function animate() {
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    // Critical Fix: Filter dead particles to prevent memory leak
                     particles = particles.filter(p => p.alpha > 0);
                     
                     for (let i = 0; i < particles.length; i++) {
                         let p = particles[i];
                         p.vy += 0.2; p.vx *= 0.98; p.vy *= 0.98;
                         p.x += p.vx; p.y += p.vy; p.alpha -= p.decay;
-                        ctx.globalAlpha = Math.max(0, p.alpha);
-                        ctx.fillStyle = p.color;
+                        ctx.globalAlpha = Math.max(0, p.alpha); ctx.fillStyle = p.color;
                         ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
                     }
                     if (particles.length > 0 || performance.now() < 2000) { requestAnimationFrame(animate); } 
@@ -683,7 +685,7 @@
         document.getElementById('closeTutorialBtn').addEventListener('click', () => {
             document.getElementById('tutorialModal').classList.add('hidden'); 
             setTimeout(() => {
-                document.querySelectorAll('.title-spin').forEach(el => el.classList.add('do-spin'));
+                document.querySelectorAll('.title-front, .title-back').forEach(el => el.classList.add('do-spin'));
                 setTimeout(() => { document.getElementById('mainTitle').classList.add('h1-bounce'); }, 1200);
             }, 500);
         });
@@ -712,7 +714,7 @@
 
         // --- BOOTSTRAP ---
         window.onload = async () => {
-            await loadLocalDictionary(); // Ensures words load before play starts
+            await loadLocalDictionary(); 
             initGame();
         };
     </script>
