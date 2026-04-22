@@ -400,7 +400,6 @@
             els.message.style.display = 'block'; els.shareBtn.style.display = 'none';
             els.submitBtn.style.display = 'block'; els.backspaceBtn.style.display = 'block';
             
-            // FIX: Force submit button text to reset when starting a new day
             els.submitBtn.innerText = "Submit";
             els.submitBtn.disabled = false;
             
@@ -598,6 +597,7 @@
                 triggerFireworks();
             }
 
+            // FIX: Drastically reduced delay so the message pops *during* the fireworks
             setTimeout(() => {
                 els.message.style.display = 'none'; els.bankContainer.style.display = 'none';
                 els.submitBtn.style.display = 'none'; els.backspaceBtn.style.display = 'none';
@@ -606,7 +606,7 @@
                 else { els.endMessage.innerText = "Unlucky!\nThe word was " + state.targetWord.toUpperCase(); }
                 
                 els.endMessage.style.display = 'block'; els.shareBtn.style.display = 'block';
-            }, state.status === "WON" ? 3500 : 1500); 
+            }, state.status === "WON" ? 1200 : 1500); 
         }
 
         function triggerFireworks() {
