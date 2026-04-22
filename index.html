@@ -107,7 +107,7 @@
             transform: translateY(-2px); animation: pop 0.2s ease-out; 
         }
 
-        /* --- THE MAGICAL MORPHING BANK TILES --- */
+        /* --- BANK TILES --- */
         .bank-tile {
             position: relative; background-color: var(--tile-bg); color: var(--tile-text);
             cursor: pointer; box-shadow: 0 4px 0 var(--tile-shadow); transition: all 0.1s;
@@ -175,11 +175,6 @@
         button.action-btn.share-btn { background: #3b82f6; box-shadow: 0 5px 0 #1d4ed8; width: 100%; flex: 1; display: none;}
         button.action-btn.share-btn:active { box-shadow: 0 0 0 #1d4ed8; }
 
-        .board-tile.correct, .board-tile.present, .board-tile.absent { transform: translateY(0); box-shadow: none; color: white; border: none; }
-        .board-tile.correct { background-color: var(--correct); }
-        .board-tile.present { background-color: var(--present); }
-        .board-tile.absent { background-color: var(--absent); opacity: 0.6;}
-
         #message { margin-top: 15px; font-weight: 800; font-size: 1.5rem; height: 1.5rem; color: #f8fafc; text-align: center; letter-spacing: 0.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); position: relative; z-index: 10;}
 
         #endMessage {
@@ -207,8 +202,28 @@
         }
         .banner-cta:active { transform: translateY(3px); box-shadow: 0 0 0 #b45309; }
 
-        /* Debug Menu */
-        .debug-container { margin-top: 40px; padding: 15px; border: 1px dashed rgba(255,255,255,0.2); border-radius: 12px; text-align: center; background-color: rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 10px; align-items: center; position: relative; z-index: 10;}
+        /* --- SETTINGS COG & DEV MENU --- */
+        .settings-btn {
+            position: fixed;
+            bottom: 80px; /* Sits just above the banner ad */
+            right: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            color: var(--text-muted);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            width: 40px; height: 40px; font-size: 1.4rem;
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer; z-index: 100; transition: all 0.2s;
+            touch-action: manipulation; opacity: 0.6;
+        }
+        .settings-btn:hover { background: rgba(0, 0, 0, 0.5); opacity: 1; transform: rotate(90deg); color: #fff; }
+
+        .debug-container { 
+            display: none; /* Hidden by default */
+            margin-top: 20px; padding: 15px; border: 1px dashed rgba(255,255,255,0.2); 
+            border-radius: 12px; text-align: center; background-color: rgba(0,0,0,0.2); 
+            flex-direction: column; gap: 10px; align-items: center; position: relative; z-index: 10;
+        }
         .debug-container h3 { margin: 0; font-size: 1.2rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-family: 'Nunito', sans-serif;}
         .debug-controls { display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap;}
         .debug-btn, select { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 8px 12px; font-size: 1.2rem; border-radius: 6px; cursor: pointer; font-family: var(--app-font); outline: none; font-weight: 700; }
@@ -220,17 +235,9 @@
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.9); display: flex; justify-content: center; align-items: center; z-index: 10000; backdrop-filter: blur(5px); }
         .modal-content { background: linear-gradient(180deg, #1e293b, #0f172a); padding: 40px 30px; border-radius: 20px; border: 2px solid #334155; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); box-sizing: border-box; }
         .modal-content h2 { margin-top: 0; color: white; font-size: 2.5rem; letter-spacing: 2px; text-transform: uppercase; font-weight: 800; margin-bottom: 20px;}
-        
-        /* --- NEW TUTORIAL STYLES --- */
-        .tutorial-gif { 
-            width: 100%; max-width: 280px; border-radius: 12px; margin: 0 auto 20px auto; 
-            display: block; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 2px solid #334155; 
-        }
-        .tutorial-text { 
-            color: var(--text-muted); font-size: 1.3rem; margin-bottom: 25px; line-height: 1.4; 
-        }
+        .tutorial-gif { width: 100%; max-width: 280px; border-radius: 12px; margin: 0 auto 20px auto; display: block; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 2px solid #334155; }
+        .tutorial-text { color: var(--text-muted); font-size: 1.3rem; margin-bottom: 25px; line-height: 1.4; }
         .tutorial-text span.highlight { color: var(--accent-color); font-weight: 800; }
-
         .close-modal-btn { padding: 16px 28px; font-size: 1.4rem; font-weight: 800; background: var(--accent-color); color: #000; border: none; border-radius: 12px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; font-family: var(--app-font); box-shadow: 0 5px 0 #b45309; transition: all 0.1s; width: 100%; touch-action: manipulation; }
         .close-modal-btn:active { transform: translateY(5px); box-shadow: 0 0 0 #b45309; }
         .hidden { display: none !important; }
@@ -276,7 +283,9 @@
 
     <div id="message" role="status"></div>
 
-    <div class="debug-container">
+    <button id="settingsBtn" class="settings-btn" aria-label="Developer Settings">⚙️</button>
+
+    <div class="debug-container" id="debugContainer">
         <h3>Developer Options</h3>
         <div class="debug-controls">
             <select id="daySelect" aria-label="Override Day">
@@ -684,6 +693,20 @@
                 document.querySelectorAll('.title-front, .title-back').forEach(el => el.classList.add('do-spin'));
                 setTimeout(() => { document.getElementById('mainTitle').classList.add('h1-bounce'); }, 1200);
             }, 500);
+        });
+
+        // --- DEV MENU LOGIC ---
+        document.getElementById('settingsBtn').addEventListener('click', () => {
+            const devMenu = document.getElementById('debugContainer');
+            if (devMenu.style.display === 'flex') {
+                devMenu.style.display = 'none';
+            } else {
+                devMenu.style.display = 'flex';
+                // Small delay to let the UI update before scrolling
+                setTimeout(() => {
+                    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                }, 50);
+            }
         });
 
         document.getElementById('daySelect').addEventListener('change', (e) => {
