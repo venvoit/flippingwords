@@ -661,7 +661,7 @@
         async function handleShare() {
             const attemptStr = state.status === "WON" ? state.currentRow + 1 : 'X';
             // FIX: Removed "Flipping Letters Score" text
-            let shareText = `Flipping Letters #${state.puzzleNumber} ${attemptStr}/${MAX_GUESSES}\n\n`;
+            let shareText = `#${state.puzzleNumber} ${attemptStr}/${MAX_GUESSES}\n\n`;
             
             for (let r = 0; r <= state.currentRow; r++) { 
                 if (r >= MAX_GUESSES) break;
