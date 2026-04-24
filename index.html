@@ -311,13 +311,13 @@
         // Guaranteed NO overlapping flip pairs within the target word.
         // Bases and distractors carefully selected to force the flip mechanics cleanly.
         const gameLevels = [
-            { word: "squad", bank: [ { char: 's', flipChar: null }, { char: 'b', flipChar: 'q' }, { char: 'n', flipChar: 'u' }, { char: 'e', flipChar: 'a' }, { char: 'p', flipChar: 'd' }, { char: 't', flipChar: null }, { char: 'i', flipChar: null }, { char: 'o', flipChar: null }, { char: 'r', flipChar: null }, { char: 'l', flipChar: null } ] },
             { word: "blend", bank: [ { char: 'q', flipChar: 'b' }, { char: 'l', flipChar: null }, { char: 'a', flipChar: 'e' }, { char: 'u', flipChar: 'n' }, { char: 'p', flipChar: 'd' }, { char: 'c', flipChar: null }, { char: 's', flipChar: null }, { char: 't', flipChar: null }, { char: 'i', flipChar: null }, { char: 'o', flipChar: null } ] },
             { word: "plumb", bank: [ { char: 'd', flipChar: 'p' }, { char: 'l', flipChar: null }, { char: 'n', flipChar: 'u' }, { char: 'w', flipChar: 'm' }, { char: 'q', flipChar: 'b' }, { char: 'c', flipChar: null }, { char: 's', flipChar: null }, { char: 't', flipChar: null }, { char: 'i', flipChar: null }, { char: 'r', flipChar: null } ] },
             { word: "drawn", bank: [ { char: 'p', flipChar: 'd' }, { char: 'r', flipChar: null }, { char: 'e', flipChar: 'a' }, { char: 'm', flipChar: 'w' }, { char: 'u', flipChar: 'n' }, { char: 'c', flipChar: null }, { char: 's', flipChar: null }, { char: 't', flipChar: null }, { char: 'i', flipChar: null }, { char: 'l', flipChar: null } ] },
             { word: "prawn", bank: [ { char: 'd', flipChar: 'p' }, { char: 'r', flipChar: null }, { char: 'e', flipChar: 'a' }, { char: 'm', flipChar: 'w' }, { char: 'u', flipChar: 'n' }, { char: 'c', flipChar: null }, { char: 's', flipChar: null }, { char: 't', flipChar: null }, { char: 'i', flipChar: null }, { char: 'l', flipChar: null } ] },
             { word: "plant", bank: [ { char: 'd', flipChar: 'p' }, { char: 'l', flipChar: null }, { char: 'e', flipChar: 'a' }, { char: 'u', flipChar: 'n' }, { char: 't', flipChar: null }, { char: 'c', flipChar: null }, { char: 's', flipChar: null }, { char: 'i', flipChar: null }, { char: 'o', flipChar: null }, { char: 'r', flipChar: null } ] },
             { word: "grand", bank: [ { char: 'g', flipChar: null }, { char: 'r', flipChar: null }, { char: 'e', flipChar: 'a' }, { char: 'u', flipChar: 'n' }, { char: 'p', flipChar: 'd' }, { char: 'c', flipChar: null }, { char: 's', flipChar: null }, { char: 't', flipChar: null }, { char: 'i', flipChar: null }, { char: 'l', flipChar: null } ] },
+            { word: "squad", bank: [ { char: 's', flipChar: null }, { char: 'b', flipChar: 'q' }, { char: 'n', flipChar: 'u' }, { char: 'e', flipChar: 'a' }, { char: 'p', flipChar: 'd' }, { char: 't', flipChar: null }, { char: 'i', flipChar: null }, { char: 'o', flipChar: null }, { char: 'r', flipChar: null }, { char: 'l', flipChar: null } ] },
             { word: "brand", bank: [ { char: 'q', flipChar: 'b' }, { char: 'r', flipChar: null }, { char: 'e', flipChar: 'a' }, { char: 'u', flipChar: 'n' }, { char: 'p', flipChar: 'd' }, { char: 'c', flipChar: null }, { char: 's', flipChar: null }, { char: 't', flipChar: null }, { char: 'i', flipChar: null }, { char: 'l', flipChar: null } ] },
             { word: "gland", bank: [ { char: 'g', flipChar: null }, { char: 'l', flipChar: null }, { char: 'e', flipChar: 'a' }, { char: 'u', flipChar: 'n' }, { char: 'p', flipChar: 'd' }, { char: 'c', flipChar: null }, { char: 's', flipChar: null }, { char: 't', flipChar: null }, { char: 'i', flipChar: null }, { char: 'r', flipChar: null } ] },
             { word: "blank", bank: [ { char: 'q', flipChar: 'b' }, { char: 'l', flipChar: null }, { char: 'e', flipChar: 'a' }, { char: 'u', flipChar: 'n' }, { char: 'k', flipChar: null }, { char: 'c', flipChar: null }, { char: 's', flipChar: null }, { char: 't', flipChar: null }, { char: 'i', flipChar: null }, { char: 'r', flipChar: null } ] },
@@ -661,7 +661,7 @@
         async function handleShare() {
             const attemptStr = state.status === "WON" ? state.currentRow + 1 : 'X';
             // FIX: Removed "Flipping Letters Score" text
-            let shareText = `#${state.puzzleNumber} ${attemptStr}/${MAX_GUESSES}\n\n`;
+            let shareText = `#${state.puzzleNumber} Guesses: ${attemptStr}/${MAX_GUESSES}\n\n`;
             
             for (let r = 0; r <= state.currentRow; r++) { 
                 if (r >= MAX_GUESSES) break;
