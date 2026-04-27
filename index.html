@@ -78,7 +78,7 @@
 
         #board {
             display: grid; 
-            grid-template-rows: repeat(5, 1fr); /* UPGRADED TO 5 GUESSES */
+            grid-template-rows: repeat(5, 1fr); 
             grid-gap: 6px;
             margin-bottom: 20px; padding: 12px; background: var(--board-bg);
             border-radius: 16px; backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
@@ -95,10 +95,16 @@
             background-color: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2); 
             color: var(--tile-text); transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
+        
+        /* FIX: Forces filled tiles to be dark text, overriding mobile browsers */
         .board-tile.filled { 
-            background-color: var(--tile-bg); border: none; box-shadow: 0 4px 0 var(--tile-shadow);
+            background-color: var(--tile-bg) !important; 
+            color: var(--tile-text) !important;
+            border: none !important; 
+            box-shadow: 0 4px 0 var(--tile-shadow) !important;
             transform: translateY(-2px); animation: pop 0.2s ease-out; 
         }
+        .board-tile.filled .char-span { color: var(--tile-text) !important; }
 
         .bank-tile {
             position: relative; background-color: var(--tile-bg); color: var(--tile-text);
@@ -162,8 +168,11 @@
 
         .board-tile.correct, .board-tile.present, .board-tile.absent { transform: translateY(0) !important; box-shadow: none !important; color: white !important; border: none !important; }
         .board-tile.correct { background-color: var(--correct) !important; }
+        .board-tile.correct .char-span { color: white !important; }
         .board-tile.present { background-color: var(--present) !important; }
+        .board-tile.present .char-span { color: white !important; }
         .board-tile.absent { background-color: var(--absent) !important; opacity: 0.6 !important;}
+        .board-tile.absent .char-span { color: white !important; }
 
         #message { margin-top: 15px; font-weight: 800; font-size: 1.5rem; height: 1.5rem; color: #f8fafc; text-align: center; letter-spacing: 0.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); position: relative; z-index: 10;}
 
@@ -248,8 +257,7 @@
                 <div class="stat-box"><div class="stat-num" id="statStreak">0</div><div class="stat-label">Streak</div></div>
                 <div class="stat-box"><div class="stat-num" id="statMax">0</div><div class="stat-label">Max</div></div>
             </div>
-            <div class="dist-chart" id="distChart">
-                </div>
+            <div class="dist-chart" id="distChart"></div>
             <button class="close-modal-btn" id="closeStatsBtn">Close</button>
         </div>
     </div>
@@ -310,7 +318,7 @@
 
     <script>
         const WORD_LENGTH = 5;
-        const MAX_GUESSES = 5; // UPDATED: Now gives 5 tries
+        const MAX_GUESSES = 5; 
         const ANIMATION_DELAY_MS = 150;
         const SHAKE_DELAY_MS = 300;
 
@@ -348,7 +356,7 @@
                     words.forEach(w => validWords.add(w.toLowerCase()));
                 }
             } catch (e) {
-                console.warn("Full valid-words.json not found. Game will only accept exact daily targets.");
+                console.warn("Full valid-words.json not found.");
             }
         }
 
@@ -361,28 +369,28 @@
             }
         }
 
-        // --- STATS SYSTEM (LocalStorage) ---
         let userStats = JSON.parse(localStorage.getItem('flippingLettersStats')) || {
             played: 0, wins: 0, currentStreak: 0, maxStreak: 0, distribution: Array(MAX_GUESSES).fill(0), lastCompletedDay: -1
         };
 
-        function saveStats() {
-            localStorage.setItem('flippingLettersStats', JSON.stringify(userStats));
+        // Safety map: If they played the old 4-guess version, migrate their stats to the new 5-guess array
+        if (userStats.distribution.length < MAX_GUESSES) {
+            const newDist = Array(MAX_GUESSES).fill(0);
+            userStats.distribution.forEach((val, i) => newDist[i] = val);
+            userStats.distribution = newDist;
         }
 
-        function updateStats(won) {
-            // Prevent refreshing the page and claiming multiple wins for the same puzzle
-            if (userStats.lastCompletedDay === state.puzzleNumber) return;
+        function saveStats() { localStorage.setItem('flippingLettersStats', JSON.stringify(userStats)); }
 
+        function updateStats(won) {
+            if (userStats.lastCompletedDay === state.puzzleNumber) return;
             userStats.played++;
             if (won) {
                 userStats.wins++;
                 userStats.currentStreak++;
                 if (userStats.currentStreak > userStats.maxStreak) userStats.maxStreak = userStats.currentStreak;
                 userStats.distribution[state.currentRow]++;
-            } else {
-                userStats.currentStreak = 0;
-            }
+            } else { userStats.currentStreak = 0; }
             userStats.lastCompletedDay = state.puzzleNumber;
             saveStats();
         }
@@ -393,9 +401,9 @@
             document.getElementById('statStreak').innerText = userStats.currentStreak;
             document.getElementById('statMax').innerText = userStats.maxStreak;
 
-            const maxDist = Math.max(...userStats.distribution, 1); // Avoid div by 0
+            const maxDist = Math.max(...userStats.distribution, 1); 
             const chartHtml = userStats.distribution.map((count, index) => {
-                const widthPct = Math.max((count / maxDist) * 100, 8); // Minimum 8% width so zero is visible
+                const widthPct = Math.max((count / maxDist) * 100, 8); 
                 const isCurrent = state.status === "WON" && state.currentRow === index;
                 return `
                     <div class="dist-row">
@@ -412,13 +420,8 @@
             board: Array.from({length: MAX_GUESSES}, () => []), bank: [] 
         };
 
-        const els = {
-            board: document.getElementById('board'), bank: document.getElementById('bank'),
-            message: document.getElementById('message'), endMessage: document.getElementById('endMessage'),
-            submitBtn: document.getElementById('submitBtn'), backspaceBtn: document.getElementById('backspaceBtn'),
-            shareBtn: document.getElementById('shareBtn'), statsBtn: document.getElementById('statsBtn'),
-            bankContainer: document.getElementById('bank-container')
-        };
+        // Using direct getter functions prevents 'null' crashes if the HTML is incomplete
+        function getEl(id) { return document.getElementById(id); }
 
         function initGame(overrideIndex = null) {
             const launchDate = new Date(Date.UTC(2026, 3, 24)); 
@@ -443,18 +446,31 @@
             }
             state.bank = rawBank;
 
-            els.bankContainer.style.display = 'block'; els.endMessage.style.display = 'none';
-            els.message.style.display = 'block'; els.shareBtn.style.display = 'none'; els.statsBtn.style.display = 'none';
-            els.submitBtn.style.display = 'block'; els.backspaceBtn.style.display = 'block';
-            els.submitBtn.innerText = "Submit"; els.submitBtn.disabled = false;
-            els.message.innerText = ""; document.getElementById('debugWord').style.visibility = 'hidden';
+            // Safe property setting prevents complete halting if an element is missing
+            if(getEl('bank-container')) getEl('bank-container').style.display = 'block'; 
+            if(getEl('endMessage')) getEl('endMessage').style.display = 'none';
+            if(getEl('message')) { getEl('message').style.display = 'block'; getEl('message').innerText = ""; }
+            if(getEl('shareBtn')) getEl('shareBtn').style.display = 'none'; 
+            if(getEl('statsBtn')) getEl('statsBtn').style.display = 'none';
+            
+            if(getEl('submitBtn')) {
+                getEl('submitBtn').style.display = 'block';
+                getEl('submitBtn').innerText = "Submit"; 
+                getEl('submitBtn').disabled = false;
+            }
+            if(getEl('backspaceBtn')) getEl('backspaceBtn').style.display = 'block';
+            if(getEl('debugWord')) getEl('debugWord').style.visibility = 'hidden';
+            
             document.body.style.pointerEvents = 'auto'; 
 
             initDOM(); render();
         }
 
         function initDOM() {
-            els.board.innerHTML = ''; 
+            const boardEl = getEl('board');
+            if(!boardEl) return; // Prevent collapse bug
+
+            boardEl.innerHTML = ''; 
             for (let i = 0; i < MAX_GUESSES; i++) {
                 const row = document.createElement('div');
                 row.className = 'row'; row.id = `row-${i}`; row.setAttribute('role', 'row');
@@ -465,10 +481,13 @@
                     tile.appendChild(charSpan);
                     row.appendChild(tile);
                 }
-                els.board.appendChild(row);
+                boardEl.appendChild(row);
             }
 
-            els.bank.innerHTML = ''; 
+            const bankEl = getEl('bank');
+            if(!bankEl) return;
+
+            bankEl.innerHTML = ''; 
             state.bank.forEach((item, index) => {
                 const tile = document.createElement('div');
                 tile.className = 'bank-tile'; tile.id = `bank-tile-${index}`;
@@ -496,18 +515,21 @@
                 }
                 tile.appendChild(charContainer);
                 tile.addEventListener('click', () => handleAddLetter(index));
-                els.bank.appendChild(tile);
+                bankEl.appendChild(tile);
             });
         }
 
         function render() {
             for (let r = 0; r < MAX_GUESSES; r++) {
                 const rowState = state.board[r];
-                const rowEl = document.getElementById(`row-${r}`);
+                const rowEl = getEl(`row-${r}`);
+                if(!rowEl) continue;
                 
                 for (let i = 0; i < WORD_LENGTH; i++) {
                     const tileState = rowState[i];
-                    const tileEl = document.getElementById(`tile-${r}-${i}`);
+                    const tileEl = getEl(`tile-${r}-${i}`);
+                    if(!tileEl) continue;
+
                     const spanEl = tileEl.querySelector('.char-span');
                     
                     tileEl.className = 'board-tile';
@@ -528,18 +550,21 @@
             }
 
             state.bank.forEach((item, index) => {
-                const tileEl = document.getElementById(`bank-tile-${index}`);
-                item.isFlipped ? tileEl.classList.add('flipped') : tileEl.classList.remove('flipped');
+                const tileEl = getEl(`bank-tile-${index}`);
+                if(tileEl) item.isFlipped ? tileEl.classList.add('flipped') : tileEl.classList.remove('flipped');
             });
         }
 
         function showMessage(msg) {
-            els.message.innerText = msg;
-            if (state.status === "PLAYING" && msg !== "") setTimeout(() => { els.message.innerText = ""; }, 2500);
+            const msgEl = getEl('message');
+            if(!msgEl) return;
+            msgEl.innerText = msg;
+            if (state.status === "PLAYING" && msg !== "") setTimeout(() => { msgEl.innerText = ""; }, 2500);
         }
 
         function triggerRowShake() {
-            const rowEl = document.getElementById(`row-${state.currentRow}`);
+            const rowEl = getEl(`row-${state.currentRow}`);
+            if(!rowEl) return;
             rowEl.classList.remove('shake'); void rowEl.offsetWidth; rowEl.classList.add('shake');
             setTimeout(() => rowEl.classList.remove('shake'), SHAKE_DELAY_MS);
         }
@@ -575,9 +600,10 @@
             }
 
             const guessString = currentRowData.map(g => g.logicalChar).join('');
+            const submitBtn = getEl('submitBtn');
 
             state.status = "CHECKING";
-            els.submitBtn.innerText = "Checking..."; els.submitBtn.disabled = true;
+            if(submitBtn) { submitBtn.innerText = "Checking..."; submitBtn.disabled = true; }
             document.body.style.pointerEvents = 'none'; 
 
             if (!validWords.has(guessString)) {
@@ -585,7 +611,7 @@
                 unlockInput(); return;
             }
 
-            els.submitBtn.innerText = "Submit";
+            if(submitBtn) submitBtn.innerText = "Submit";
 
             let targetArray = state.targetWord.split('');
             
@@ -604,13 +630,15 @@
                 }
             }
 
-            const rowEl = document.getElementById(`row-${state.currentRow}`);
-            for (let i = 0; i < WORD_LENGTH; i++) {
-                setTimeout(() => {
-                    const tileEl = rowEl.children[i];
-                    tileEl.classList.remove('filled', 'active-row');
-                    tileEl.classList.add(currentRowData[i].status);
-                }, i * ANIMATION_DELAY_MS);
+            const rowEl = getEl(`row-${state.currentRow}`);
+            if(rowEl) {
+                for (let i = 0; i < WORD_LENGTH; i++) {
+                    setTimeout(() => {
+                        const tileEl = rowEl.children[i];
+                        tileEl.classList.remove('filled', 'active-row');
+                        tileEl.classList.add(currentRowData[i].status);
+                    }, i * ANIMATION_DELAY_MS);
+                }
             }
 
             setTimeout(() => {
@@ -626,37 +654,43 @@
 
         function unlockInput() {
             state.status = "PLAYING";
-            els.submitBtn.innerText = "Submit"; els.submitBtn.disabled = false;
+            const submitBtn = getEl('submitBtn');
+            if(submitBtn) { submitBtn.innerText = "Submit"; submitBtn.disabled = false; }
             document.body.style.pointerEvents = 'auto';
         }
 
         function handleEndGame(won) {
             document.body.style.pointerEvents = 'auto';
-            updateStats(won); // Save to LocalStorage
+            updateStats(won); 
 
             if (won) {
-                const rowNodes = document.getElementById(`row-${state.currentRow}`).children;
-                for (let i = 0; i < WORD_LENGTH; i++) {
-                    setTimeout(() => { rowNodes[i].classList.add('win-dance'); }, i * 100);
+                const rowEl = getEl(`row-${state.currentRow}`);
+                if(rowEl) {
+                    for (let i = 0; i < WORD_LENGTH; i++) {
+                        setTimeout(() => { rowEl.children[i].classList.add('win-dance'); }, i * 100);
+                    }
                 }
                 triggerFireworks();
             }
 
             setTimeout(() => {
-                els.message.style.display = 'none'; els.bankContainer.style.display = 'none';
-                els.submitBtn.style.display = 'none'; els.backspaceBtn.style.display = 'none';
+                if(getEl('message')) getEl('message').style.display = 'none'; 
+                if(getEl('bank-container')) getEl('bank-container').style.display = 'none';
+                if(getEl('submitBtn')) getEl('submitBtn').style.display = 'none'; 
+                if(getEl('backspaceBtn')) getEl('backspaceBtn').style.display = 'none';
                 
-                if (won) { els.endMessage.innerText = "Well done!"; } 
-                else { els.endMessage.innerText = "Unlucky!\nThe word was " + state.targetWord.toUpperCase(); }
+                const endMsg = getEl('endMessage');
+                if(endMsg) {
+                    endMsg.innerText = won ? "Well done!" : "Unlucky!\nThe word was " + state.targetWord.toUpperCase();
+                    endMsg.style.display = 'block';
+                }
                 
-                els.endMessage.style.display = 'block'; 
-                els.shareBtn.style.display = 'block';
-                els.statsBtn.style.display = 'block';
+                if(getEl('shareBtn')) getEl('shareBtn').style.display = 'block';
+                if(getEl('statsBtn')) getEl('statsBtn').style.display = 'block';
                 
-                // Auto-show stats shortly after game ends
                 setTimeout(() => {
                     renderStatsModal();
-                    document.getElementById('statsModal').classList.remove('hidden');
+                    if(getEl('statsModal')) getEl('statsModal').classList.remove('hidden');
                 }, 1500);
 
             }, won ? 1200 : 1500); 
@@ -743,29 +777,29 @@
 
         function copyToClipboard(text) { navigator.clipboard.writeText(text).then(() => showMessage("Copied to clipboard!")).catch(err => showMessage("Failed to copy")); }
         
-        els.submitBtn.addEventListener('click', handleSubmit);
-        els.backspaceBtn.addEventListener('click', handleBackspace);
-        els.shareBtn.addEventListener('click', handleShare);
+        if(getEl('submitBtn')) getEl('submitBtn').addEventListener('click', handleSubmit);
+        if(getEl('backspaceBtn')) getEl('backspaceBtn').addEventListener('click', handleBackspace);
+        if(getEl('shareBtn')) getEl('shareBtn').addEventListener('click', handleShare);
         
-        els.statsBtn.addEventListener('click', () => {
+        if(getEl('statsBtn')) getEl('statsBtn').addEventListener('click', () => {
             renderStatsModal();
-            document.getElementById('statsModal').classList.remove('hidden');
+            getEl('statsModal').classList.remove('hidden');
         });
 
-        document.getElementById('closeStatsBtn').addEventListener('click', () => {
-            document.getElementById('statsModal').classList.add('hidden');
+        if(getEl('closeStatsBtn')) getEl('closeStatsBtn').addEventListener('click', () => {
+            getEl('statsModal').classList.add('hidden');
         });
 
-        document.getElementById('closeTutorialBtn').addEventListener('click', () => {
-            document.getElementById('tutorialModal').classList.add('hidden'); 
+        if(getEl('closeTutorialBtn')) getEl('closeTutorialBtn').addEventListener('click', () => {
+            getEl('tutorialModal').classList.add('hidden'); 
             setTimeout(() => {
                 document.querySelectorAll('.title-front, .title-back').forEach(el => el.classList.add('do-spin'));
-                setTimeout(() => { document.getElementById('mainTitle').classList.add('h1-bounce'); }, 1200);
+                setTimeout(() => { getEl('mainTitle').classList.add('h1-bounce'); }, 1200);
             }, 500);
         });
 
-        document.getElementById('settingsBtn').addEventListener('click', () => {
-            const devMenu = document.getElementById('debugContainer');
+        if(getEl('settingsBtn')) getEl('settingsBtn').addEventListener('click', () => {
+            const devMenu = getEl('debugContainer');
             if (devMenu.style.display === 'flex') {
                 devMenu.style.display = 'none';
             } else {
@@ -774,7 +808,7 @@
             }
         });
 
-        document.getElementById('resetStatsBtn').addEventListener('click', () => {
+        if(getEl('resetStatsBtn')) getEl('resetStatsBtn').addEventListener('click', () => {
             if(confirm("Are you sure you want to reset all local stats?")) {
                 localStorage.removeItem('flippingLettersStats');
                 userStats = { played: 0, wins: 0, currentStreak: 0, maxStreak: 0, distribution: Array(MAX_GUESSES).fill(0), lastCompletedDay: -1 };
@@ -782,26 +816,26 @@
             }
         });
 
-        document.getElementById('daySelect').addEventListener('change', (e) => {
+        if(getEl('daySelect')) getEl('daySelect').addEventListener('change', (e) => {
             if (e.target.value !== "") initGame(parseInt(e.target.value));
         });
 
-        document.getElementById('fontSelect').addEventListener('change', (e) => {
+        if(getEl('fontSelect')) getEl('fontSelect').addEventListener('change', (e) => {
             document.documentElement.style.setProperty('--app-font', e.target.value);
         });
 
-        document.getElementById('debugBtn').addEventListener('click', () => {
-            const debugText = document.getElementById('debugWord');
+        if(getEl('debugBtn')) getEl('debugBtn').addEventListener('click', () => {
+            const debugText = getEl('debugWord');
             debugText.style.visibility = debugText.style.visibility === 'visible' ? 'hidden' : 'visible';
             debugText.innerText = state.targetWord;
         });
 
         document.addEventListener("keydown", (e) => {
-            if (!document.getElementById('tutorialModal').classList.contains('hidden')) {
-                if (e.key === "Enter") document.getElementById('closeTutorialBtn').click(); return;
+            if (getEl('tutorialModal') && !getEl('tutorialModal').classList.contains('hidden')) {
+                if (e.key === "Enter") getEl('closeTutorialBtn').click(); return;
             }
-            if (!document.getElementById('statsModal').classList.contains('hidden')) {
-                if (e.key === "Enter") document.getElementById('closeStatsBtn').click(); return;
+            if (getEl('statsModal') && !getEl('statsModal').classList.contains('hidden')) {
+                if (e.key === "Enter") getEl('closeStatsBtn').click(); return;
             }
             if (e.key === "Backspace") handleBackspace();
             if (e.key === "Enter") handleSubmit();
